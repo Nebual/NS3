@@ -1,0 +1,10 @@
+"AddonInfo"
+{
+	"name"		"NS3"
+	"up_date"	"Nov 14th 2012"
+	"author_name"	"Nebual"
+	"author_email"	"nebual@nebtown.info"
+	"author_url"	"http://nebtown.pbworks.com"
+	
+	"info"		"Neb Support 3 (Spacebuild)"
+}
