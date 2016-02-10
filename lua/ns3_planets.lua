@@ -36,7 +36,7 @@ function NS3.LoadEnvironments()
 		if DEBUG then print("Loading planet of style ["..style.."]") PrintTable(v) end
 		if style == "planet" then
 			local radius,gravity,atmosphere,shadetemp,littemp,flags = num(v.Case02),num(v.Case03),num(v.Case04),num(v.Case05),num(v.Case06),num(v.Case16)
-			local planet = ents.Create( "ns3_planet" ) 
+			local planet = ents.Create( "ns3_planet" )
 			planet:SetAngles(ent:GetAngles()) planet:SetPos(ent:GetPos()) planet.Pos = ent:GetPos() planet:Spawn()
 			// planet:SetParent(ent)
 			table.insert(NS3.Planets, planet)
@@ -46,7 +46,7 @@ function NS3.LoadEnvironments()
 				unstable = Extract_Bit(2, flags)
 				sunburn = Extract_Bit(3, flags)
 			end
-			
+
 			local name = "Planet " .. tostring(#NS3.Planets + 1) -- Most 'planet' styles don't have a name
 			if v.Case07 and string.sub(v.Case07,1,6) == "color_" then name = string.upper(string.sub(v.Case07,7,7))..string.sub(v.Case07,8) end -- Some 'planet's reference a planet_color logic_case like 'color_kobol'
 
@@ -54,8 +54,8 @@ function NS3.LoadEnvironments()
 		elseif style == "planet2" or style == "cube" then
 			local radius,gravity,atmosphere,pressure,shadetemp,littemp,flags,o2,co2,n,h,name = num(v.Case02),num(v.Case03),num(v.Case04),num(v.Case05),num(v.Case06),num(v.Case07),num(v.Case08),num(v.Case09),num(v.Case10),num(v.Case11),num(v.Case12),tostring(v.Case13)
 
-			local planet = ents.Create( "ns3_planet" ) 
-			planet:SetAngles(ent:GetAngles()) planet:SetPos( ent:GetPos() ) planet.Pos = ent:GetPos() planet:Spawn() 
+			local planet = ents.Create( "ns3_planet" )
+			planet:SetAngles(ent:GetAngles()) planet:SetPos( ent:GetPos() ) planet.Pos = ent:GetPos() planet:Spawn()
 			//planet:SetParent(ent)
 			table.insert(NS3.Planets, planet)
 			local unstable,sunburn
@@ -76,8 +76,8 @@ function NS3.LoadEnvironments()
 			if name == "" then name = "Planet " .. tostring(#NS3.Planets + 1) end
 			planet:CreateEnvironment(radius, gravity, atmosphere, pressure, shadetemp, littemp, o2, co2, n, h, unstable, sunburn, name)
 		elseif style == "star" then
-			local star = ents.Create( "ns3_planet" ) 
-			star:SetAngles( ent:GetAngles() ) star:SetPos( ent:GetPos() ) star.Pos = ent:GetPos() star:Spawn() 
+			local star = ents.Create( "ns3_planet" )
+			star:SetAngles( ent:GetAngles() ) star:SetPos( ent:GetPos() ) star.Pos = ent:GetPos() star:Spawn()
 			//star:SetParent(ent)
 			table.insert(NS3.Stars, star) star.IsStar = true
 			star.Temperature2 = 700
@@ -86,8 +86,8 @@ function NS3.LoadEnvironments()
 			star.Temperature5 = 285
 			star:CreateEnvironment(num(v.Case02)/4, 0, 0, 100, 100000, nil, 0, 0, 0, 100, true, true, "Star "..tostring(#NS3.Stars + 1))
 		elseif style == "star2" then
-			local star = ents.Create( "ns3_planet" ) 
-			star:SetAngles( ent:GetAngles() ) star:SetPos( ent:GetPos() ) star.Pos = ent:GetPos() star:Spawn() 
+			local star = ents.Create( "ns3_planet" )
+			star:SetAngles( ent:GetAngles() ) star:SetPos( ent:GetPos() ) star.Pos = ent:GetPos() star:Spawn()
 			//star:SetParent(ent)
 			table.insert(NS3.Stars, star) star.IsStar = true
 			local temp1,temp2,temp3 = num(v.Case03),num(v.Case04),num(v.Case05)
@@ -100,7 +100,7 @@ function NS3.LoadEnvironments()
 			ErrorNoHalt("NS3: Skipping unhandled environment type '"..style.."'...\n")
 		end
 	end
-	
+
 	NS3.PlanetaryOverrides = util.JSONToTable(file.Read("nebcorp/ns3_overrides.txt") or "{}")
 	for k,v in pairs(NS3.PlanetaryOverrides or {}) do
 		if v.style == "star" then

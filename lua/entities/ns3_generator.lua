@@ -37,10 +37,10 @@ function ENT:Setup()
 	if self.Style then overlay = self.Style .. " " .. overlay end
 	self.OverlayBase =  "NS3 "..overlay.." Generator"
 	self.Overlay = self.OverlayBase
-	
+
 	if self.Style then self.ProduceResource = self.Lists.ProduceResource[self.Resource .. "_"..self.Style] else self.ProduceResource = self.Lists.ProduceResource[self.Resource] end
 	if !self.ProduceResource then self.ProduceResource = self.Lists.ProduceResource.Default print("NS3 Warning: No such generator type as "..(overlay or "")) end
-	
+
 	if self.Style == "Hydro" or self.Resource == "Water" then
 		self.WaterPhobic = false
 	elseif self.Style == "Wind" then
@@ -49,7 +49,7 @@ function ENT:Setup()
 		self.IdleSound2 = nil
 		self:SetActive(true)
 	elseif self.Style == "Condenser" then
-		// Water Condenser: 
+		// Water Condenser:
 		self.Efficiency = 15
 	elseif self.Style == "Kinetic" then
 		self.Mute = true
@@ -70,7 +70,7 @@ function ENT:Setup()
 			end
 		end
 	end
-	if self.Style == "Solar" then 
+	if self.Style == "Solar" then
 		if self:GetModel() == "models/slyfo_2/miscequipmentsolar.mdl" then self.Speed = 21 end
 		self.Mute = true
 		self.MustBeActive = false
@@ -80,12 +80,12 @@ function ENT:Setup()
 		self.Inputs = Wire_CreateInputs(self.Entity, { "On", "Mute" })
 	end
 	self.Outputs = Wire_CreateOutputs(self.Entity, {"On", "Productivity" })
-	
+
 	self.NormalSpeed = self.Speed -- So namage can reduce speed
 	self:UpdateOverlayText()
 end
 
-local function EndThink(self) 
+local function EndThink(self)
 	table.insert(self.Productivity, 1, self.TickProductivity) self.Productivity[6] = nil
 	local val = 0
 	for k,v in pairs(self.Productivity) do val = val + v end
@@ -100,16 +100,16 @@ function ENT:Think()
 	self.Entity:NextThink( round(CurTime()) + 0.95 )
 	self.TickProductivity = 0.001
 	self.OverlayWarning = nil
-	
+
 	if !self.Active and self.MustBeActive then self.Requesting = {} return EndThink(self) end
 	if self.WaterPhobic then
-		if self.Entity:WaterLevel() > 1 then 
+		if self.Entity:WaterLevel() > 1 then
 			-- Turn off in water
 			self.Entity:SetColor(Color(50, 50, 50, 255))
 			self:SetActive(false)
 			self.OverlayWarning = "Excessive water detected"
 			self.HadWetShutdown = true
-			self:UpdateOverlayText() 
+			self:UpdateOverlayText()
 			return true
 		elseif self.HadWetShutdown then
 			self.HadWetShutdown = nil
@@ -118,29 +118,29 @@ function ENT:Think()
 			self:UpdateOverlayText()
 		end
 	end
-	
+
 	if self.Namage then
 		local health = self.Namage.HP / self.Namage.MaxHP
-		
+
 		if health > 0.6 then self.Speed = self.NormalSpeed
 		elseif health > 0.4 then self.Speed = self.NormalSpeed * 0.5 self.OverlayWarning = "Moderate damage sustained"
 		elseif health > 0.2 then self.Speed = self.NormalSpeed * 0.2 self.OverlayWarning = "Heavy damage sustained"
 		else self:SetActive(false) self.OverlayWarning = "Severe damage sustained!"
 		end
 	end
-	
-	if next(self.Requesting) && self.WaitsForResources then 
+
+	if next(self.Requesting) && self.WaitsForResources then
 		-- We're still looking for shit
 		self.OverlayWarning = "Insufficient "..next(self.Requesting)
 		return EndThink(self)
 	end
-	
-	
+
+
 	if self.Resource != "Energy" then self.Requesting.Energy = 3 end -- Always ask for a little bit of energy... I mean its gotta power the display! :P
 	local product = self:ProduceResource()-- Manufactor the resource!
 	if !product then return EndThink(self) end
 	if self.Resource != "Energy" then self.Requesting.Energy = product[2] * self.Efficiency end
-	
+
 	-- "Productivity" is based on how often the gen is running (does it have enough fuel?) and how much of its product is actually used
 	local produced = product[2]
 	product = self:SendResources(product)
@@ -153,7 +153,7 @@ Please return {self.Resource (which is "Energy" or "Water"), the amount of resou
 self.Speed is meant to be the main static multiplier for how much resource to produce, which integrates generator model size.
 
 All non-energy generators are assumed to cost energy based on (ResourceProduced * self.Efficiency (default 0.5))
-"Normal" generators (ie mid sized oxygen) generate 30 oxygen a second, costing 15 energy. 
+"Normal" generators (ie mid sized oxygen) generate 30 oxygen a second, costing 15 energy.
 */
 
 -- ProduceResource is basically the custom "think" of each generator
@@ -199,26 +199,26 @@ ENT.Lists.ProduceResource = {
 		elseif self.Pulse > 1 then
 			mul = 1 - math.Min((CurTime() - self.PulseTime)/6,0.8)
 		end
-		if self:WaterLevel() > 1 then 
+		if self:WaterLevel() > 1 then
 			//self.Entity:EmitSound( self.IdleSound2,100,50 + mul*50, 20 + mul*80 )
 			return {self.Resource, self.Speed * mul * 0.25}
 		else
 			//self.Entity:StopSound( self.IdleSound2 )
 			self.OverlayWarning = "Generator must be submerged!"
 			self:SetActive(false) -- Should I be switching it off?
-		end 
+		end
 	end,
 	Energy_Wind = function(self)
 		return {self.Resource, self.Speed * self.Environment.Atmosphere * 0.2 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor*2)}
 	end,
-	Energy_Kinetic = function(self) 
+	Energy_Kinetic = function(self)
 		// Basically this is just so people shove some moving parts on their plane which look steampunky, also it has a rather low max energy output cause people will probably just thruster these.
 		local spd = self:GetPhysicsObject():GetAngleVelocity():Length()
 		if spd > 10 then
 			return {self.Resource, self.Speed * (math.Min(spd,400) ^ 1.5)/8000  * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
 		end
 	end,
-	-- Energy_Fusion 
+	-- Energy_Fusion
 	// NEEDS TO BE HARD TO DO (only turns on for a few seconds, thus needs complex wiring to properly maintain)
 	Fuel_Pump = function(self)
 		// TODO: Make this way cooler with deposits of fuel and shit

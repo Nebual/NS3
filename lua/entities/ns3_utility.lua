@@ -7,27 +7,27 @@ ENT.WireDebugName="NS3 Utility"
 
 for k=1,5 do util.PrecacheSound( "ambient/creakmetal"..k..".wav" ) end
 
-if CLIENT then 
+if CLIENT then
 	local ball = ClientsideModel("models/hunter/misc/shell2x2.mdl", RENDERGROUP_OPAQUE)
 	ball:SetNoDraw( true ) ball:DrawShadow( false )
 	ball:SetMaterial("models/shiny")
 	function ENT:Draw()
 		self.BaseClass.Draw(self)
-		
+
 		if LocalPlayer():GetEyeTrace().Entity == self and IsValid(LocalPlayer():GetTool()) and LocalPlayer():GetTool().Mode == "nebsupporter" then
-		
+
 			local range = self:GetNetworkedInt("Range")
 			if range then
 				ball:SetColor(Color(0,0,100,100))
 				ball:SetPos(self:GetPos())
 				SetScale(ball, Vector(math.Max(range / 95, 0.01), math.Max(range / 95, 0.01), math.Max(range / 95, 0.01)))
-				timer.Create("ResetNebsupporterBall",5,1,function() 
+				timer.Create("ResetNebsupporterBall",5,1,function()
 					ball:SetColor(Color(0,0,0,0))
 				end)
 			end
 		end
 	end
-	return 
+	return
 end
 
 ENT.Lists = {}
@@ -38,7 +38,7 @@ local round = math.Round
 function ENT:Initialize()
 	self.BaseClass.Initialize(self)
 	self.Entity:NextThink( round(CurTime()) + 2 )
-	
+
 	self.Priority = self.Priority or 4
 	self.Efficiency = self.Efficiency or math.Rand(0.8,1.2) // Oxygen should be 2, hydrogen 3, etc. Harder ones higher
 	self.RandomFactor = self.RandomFactor or 0.15
@@ -47,11 +47,11 @@ function ENT:Initialize()
 	self.FootBreaths = {}
 	self.LastWarned = 0
 	self.WaterPhobic = true
-	
+
 	-- Incase we don't have environments, like on gm_ maps, give the generator its own 'planet' to harvest from
 	self.Environment = {Resources = {Empty = 0}, Max = 4000000, Pressure = 1, Gravity = 1}
 	for k,_ in pairs(NS3.Resources) do self.Environment.Resources[k] = 1000000 end
-	
+
 	self.OverlayBase =  "NS3 Unspecified Utility Device"
 end
 
@@ -65,7 +65,7 @@ function ENT:Setup()
 		WireLib.CreateOutputs(self.Entity, {"On" })
 	end
 	self.SubThink = self.Lists.SubThink[kind] or self.Lists.SubThink.Default
-	
+
 	if kind == "Air_Regulator" then
 		self.Regulate = self.Lists.Regulate[kind] or self.Lists.Regulate.Default
 		self.Range = NS3.RegulatorModels[self:GetModel()] or round(self.Entity:GetPhysicsObject():GetVolume() ^ 0.72 * 0.8)
@@ -92,14 +92,14 @@ function ENT:Setup()
 		self.SetActive = function( self, value, caller )
 			if !tobool(value) or !IsValid(caller) or !caller:IsPlayer() then return false end
 			-- Only letting one person use this at a time fits perfectly into the existing SetActive infrastructure
-			self.Active = caller:EntIndex() 
+			self.Active = caller:EntIndex()
 			self.Overlay = self.OverlayBase .. ": In use by "..caller:Nick().."!"
 			caller:EmitSound( "ambient.steam01" )
 		end
 	elseif kind == "Planetary_Probe" then
 		self.OverlayBase = "NS3 Planetary Probe"
 		self.Mute = true
-		if !NS3.HasPlanets then 
+		if !NS3.HasPlanets then
 			self.Environment = {Name = string.upper(string.sub(game.GetMap(),4,4))..string.sub(game.GetMap(), 5, string.find(game.GetMap(), "_",5) - 1),Pressure = 1, Temperature = 288, Gravity = 1, Atmosphere = 1, Max = 40000, Resources = {Empty = 0}}
 			for _,v in pairs({"Oxygen","CarbonDioxide","Nitrogen","Hydrogen"}) do self.Environment.Resources[v] = 10000 end
 		end
@@ -108,10 +108,10 @@ function ENT:Setup()
 		self.OverlayBase = "NS3 Resource Counter"
 		self.Mute = true
 		self.WaterPhobic = false
-		
+
 		self.SetActive = function() return end
 		timer.Create("ResourceCounterSetup"..self:EntIndex(), 0.1, 3, function() self.Overlay = self.OverlayBase end)
-		
+
 		WireLib.AdjustSpecialInputs(self.Entity, {}, {})
 		local tab = {}
 		local tab2 = {}
@@ -123,18 +123,18 @@ function ENT:Setup()
 		WireLib.AdjustSpecialOutputs(self.Entity, tab, tab2)
 	elseif kind == "Gravity_Regulator" then
 		self.OverlayBase = "NS3 Gravity Regulator"
-	
+
 		self.IdleSound = nil
 		self.LastSound = "ambient/creakmetal1.wav"
 		self.Creak = function(self) self.Entity:StopSound(self.LastSound) if !self.Mute then local snd = "ambient/creakmetal"..math.random(1,5)..".wav" self.Entity:EmitSound(snd, 60) self.LastSound=snd end end
 		self.SetActive = function(self, value, caller )
 			self.BaseClass.SetActive(self, value, caller)
-			if tobool(value) && !self.Mute then 
-				self:Creak() 
-				timer.Create("Creak_"..self.Entity:EntIndex(), 6, 0, function() self:Creak() end) 
+			if tobool(value) && !self.Mute then
+				self:Creak()
+				timer.Create("Creak_"..self.Entity:EntIndex(), 6, 0, function() self:Creak() end)
 			else
-				self.Entity:StopSound(self.LastSound) 
-				timer.Destroy("Creak_"..self.Entity:EntIndex()) 
+				self.Entity:StopSound(self.LastSound)
+				timer.Destroy("Creak_"..self.Entity:EntIndex())
 			end
 		end
 		self.OnRemove = function(self) timer.Destroy("Creak_"..self.Entity:EntIndex()) self.Entity:StopSound(self.LastSound) self.BaseClass.OnRemove(self) end
@@ -143,8 +143,8 @@ function ENT:Setup()
 		//ambient/creakmetal4.wav
 	elseif kind == "SpaceShield" then
 		self.OverlayBase = "NS3 Space Shield"
-	
-	
+
+
 		WireLib.CreateInputs(self.Entity, { "On", "Range", "Strength", "Speed", "Mute" })
 		WireLib.CreateOutputs(self.Entity, {"On" })
 		self.TriggerInput = function(self, iname, value) -- Wiremod Inputs
@@ -152,9 +152,9 @@ function ENT:Setup()
 			elseif iname == "Range" then self.Range = math.Clamp(100,5000) // TODO: Also resize the buffer
 			elseif iname == "Strength" then self.Strength = math.Clamp(1,10)
 			elseif iname == "Speed" then self.FillSpeed = math.Clamp(1,10)
-			elseif iname == "Mute" then 
+			elseif iname == "Mute" then
 				self.Mute = value != 0
-				if self.Mute then 
+				if self.Mute then
 					if self.IdleSound then self.Entity:StopSound( self.IdleSound ) end
 					if self.IdleSound2 then self.Entity:StopSound( self.IdleSound2 ) end
 				else self:SetActive(self.Active)
@@ -172,7 +172,7 @@ function ENT:Setup()
 			["models/props_lab/tpplugholder_single.mdl"] = {Vector(8,13,10),Angle()},
 		}
 		self.PlugPos = (self.PlugPosAng[self:GetModel()] or {Vector()})[1] self.PlugAng = (self.PlugPosAng[self:GetModel()] or {0,Angle(-90,0,0)})[2]
-		
+
 		self.SetActive = function() return end
 		self.SetLength = function(self, len, Visual)
 			if Visual then self.Rope:Fire("SetLength", len, 0) end
@@ -183,7 +183,7 @@ function ENT:Setup()
 			if iname == "Deploy" then
 				self.ForceLength = nil
 				if value != 0 then
-					if !self.Deployed then 
+					if !self.Deployed then
 						local plug = ents.Create("prop_physics")
 						plug:SetModel("models/props_lab/tpplug.mdl")
 						plug:SetPos(self:LocalToWorld(self.PlugPos))
@@ -200,18 +200,18 @@ function ENT:Setup()
 								self:TriggerInput("Deploy",(self.Deployed && !self.Retract) and 0 or 1)
 							end
 						end*/ // doesn't work on prop_physics,  base_gmodentity won't seem to intialize
-						
+
 						WireLib.TriggerOutput( self, "Deployed", 1)
 						self:SetLength(100,true)
 					end
 					self.Deployed = true self.Retract = false
 				elseif value == 0 && !self.Retract then
 					self.Retract = true
-					if IsValid(self.Plug) then 
+					if IsValid(self.Plug) then
 						if IsValid(self.Plug.Weld) then
-							if IsValid(self.Connected) then self.Connected.Connected = nil end 
-							self.Connected = nil 
-							self.Plug.Weld:Remove() 
+							if IsValid(self.Connected) then self.Connected.Connected = nil end
+							self.Connected = nil
+							self.Plug.Weld:Remove()
 						end
 						self.Length = (self:LocalToWorld(self.PlugPos) - self.Plug:LocalToWorld(Vector(11,0,0))):Length()
 					end
@@ -235,7 +235,7 @@ function ENT:Setup()
 		//timer.Create("ChangeOverlay"..self:EntIndex(),0.1,1,function() self.OVerlay = self.OverlayBase end
 	end
 	if self.Range then self:SetNetworkedInt("Range",self.Range) end
-	
+
 	self.Overlay = self.OverlayBase .. ": Off!"
 	self:UpdateOverlayText()
 end
@@ -243,15 +243,15 @@ end
 function ENT:Think()
 	self.BaseClass.BaseClass.Think(self)
 	self.Entity:NextThink( round(CurTime()) + 1 )
-	
+
 	if self.WaterPhobic then
-		if self.Entity:WaterLevel() > 1 then 
+		if self.Entity:WaterLevel() > 1 then
 			-- Turn off in water
 			self:SetColor(Color(50, 50, 50, 255))
 			self:SetActive(false)
 			self.OverlayWarning = "Excessive water detected"
 			self.HadWetShutdown = true
-			self:UpdateOverlayText() 
+			self:UpdateOverlayText()
 			return true
 		elseif self.HadWetShutdown then
 			self.HadWetShutdown = nil
@@ -262,7 +262,7 @@ function ENT:Think()
 	end
 	self:StoreCollectResources() -- Gather incoming resources
 	self:SubThink() -- Ask for more resources, think, etc
-	
+
 	self:UpdateOverlayText()
 	return true
 end
@@ -329,7 +329,7 @@ ENT.Lists.SubThink = {
 	Planetary_Probe = function(self)
 		self.OverlayStatus = nil
 		if !self.Active then return end
-		if next(self.Requesting) then 
+		if next(self.Requesting) then
 			if !self.DoneProbing then self.OverlayStatus = "Probing "..self.LastEnv.." ("..round(100-self.Requesting.Energy).."%)..." end
 			self:LowResource("energy")
 		else
@@ -342,7 +342,7 @@ ENT.Lists.SubThink = {
 				self.OverlayStatus = "Probing "..env.Name.." (0%)..."
 				return
 			end
-			self.DoneProbing = true 
+			self.DoneProbing = true
 			local temp = env.Temperature or 14
 			if env.TemperatureLit && env.TemperatureLit != env.Temperature then temp = temp .. "-"..env.TemperatureLit end
 			if env.Name == "Space" then temp = 14 end // Make it look like its 14, its actually 200 for balance reasons (space can't be THAT hard...)
@@ -377,11 +377,11 @@ ENT.Lists.SubThink = {
 	end,
 	Gravity_Regulator = function(self)
 		self.OverlayStatus = nil
-		if !self.Active then 
+		if !self.Active then
 			if self.GravWasOn then self.GravWasOn = nil for k,v in pairs(constraint.GetAllConstrainedEntities(self.Entity)) do v.GravPlate = nil end end
-			return 
+			return
 		end
-		if next(self.Requesting) then 
+		if next(self.Requesting) then
 			if self.GravWasOn then self.GravWasOn = nil for k,v in pairs(constraint.GetAllConstrainedEntities(self.Entity)) do v.GravPlate = nil end end
 			if !self.DoneSetup then self.OverlayStatus = "Deploying gravity assisters ("..round(100-self.Requesting.Energy).."%)..." end
 			self:LowResource("energy")
@@ -395,11 +395,11 @@ ENT.Lists.SubThink = {
 	end,
 	Gravity_Regulator = function(self)
 		self.OverlayStatus = nil
-		if !self.Active then 
+		if !self.Active then
 			if self.GravWasOn then self.GravWasOn = nil for k,v in pairs(constraint.GetAllConstrainedEntities(self.Entity)) do v.GravPlate = nil end end
-			return 
+			return
 		end
-		if next(self.Requesting) then 
+		if next(self.Requesting) then
 			if self.GravWasOn then self.GravWasOn = nil for k,v in pairs(constraint.GetAllConstrainedEntities(self.Entity)) do v.GravPlate = nil end end
 			if !self.DoneSetup then self.OverlayStatus = "Deploying gravity assisters ("..round(100-self.Requesting.Energy).."%)..." end
 			self:LowResource("energy")
@@ -464,18 +464,18 @@ ENT.Lists.SubThink = {
 				self.Entity:NextThink( round(CurTime()) + 1 )
 				return
 			end
-			
+
 			if self.SoundSpecial:IsPlaying() then self.SoundSpecial:Stop() end
 			self.Entity:NextThink( CurTime() + 0.2 )
-			
+
 			if self.Retract then
 				self.Overlay = self.OverlayBase .. ": Retracting"
 				if self.Length == 2000 then self.Length = (self:LocalToWorld(self.PlugPos) - self.Plug:LocalToWorld(Vector(11,0,0))):Length() end
 				// Gradually bring her in
 				self.Length = self.Length - math.Max(20, self.Length / 20)
-				if self.Length < 0 then 
-					self.Plug:Remove() 
-					self.Plug = nil 
+				if self.Length < 0 then
+					self.Plug:Remove()
+					self.Plug = nil
 					self.Retract = nil
 					self.Deployed = nil
 					WireLib.TriggerOutput( self, "Deployed", 0)
@@ -503,7 +503,7 @@ ENT.Lists.SubThink = {
 					self:SetLength(2000,false)
 					return
 				end
-				
+
 				if self.Plug:IsPlayerHolding() then
 					self:SetLength(2000,false) // So you can phys/gravgun it unrestrained
 				elseif self.ForceLength then
@@ -554,7 +554,7 @@ function ENT:FindFootBreathEnts(timerid)
 	for k,v in pairs(self.FootBreaths) do v[self.Resource] = nil end
 	self.FootBreaths = {}
 	for k,v in pairs(ents.FindInSphere(self:GetPos(),self.Range)) do if EntIsNormal(v) then self.FootBreaths[v:EntIndex()] = v end end
-	
+
 	local constraintstab
 	if self:GetParent():IsValid() then constraintstab = constraint.GetAllConstrainedEntities(self:GetParent())
 	else constraintstab = constraint.GetAllConstrainedEntities(self.Entity)

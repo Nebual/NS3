@@ -89,7 +89,7 @@ function NS3.HUDPaint()
 		draw.DrawText( "SuitTemp:", font, leftpos, h, c.White, 0 ) // This 0 means text align left, 2 would mean right
 		if Suit.TempWarn then valcol = c.Warn else valcol = c.White end
 		draw.DrawText(Suit.TempMessage .. " ("..Suit.Temperature..")", font, rightpos, h, valcol, 2 )
-		
+
 		h = h + 15
 		draw.DrawText( "EnvTemp:", font, leftpos, h, c.White, 0 ) // This 0 means text align left, 2 would mean right
 		if Suit.EnvTempWarn then valcol = c.Warn else valcol = c.White end
@@ -112,7 +112,7 @@ function NS3.HUDPaint()
 		h = h + 15
 		draw.DrawText( "Energy:", font, leftpos, h, c.White, 0 )
 		draw.DrawText( math.floor(res*10)/10 .."% ("..math.floor(Suit.Energy / 5).."s)", font, rightpos,h, valcol, 2 )
-		
+
 		h = h + 18
 		draw.RoundedBox( 8, scrw - 45 , h, 90, 20, c.Blue)
 		draw.DrawText( "Toggle Helmet", font, scrw, h + 3, c.White, 1 )

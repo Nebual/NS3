@@ -22,7 +22,7 @@ if CLIENT then
 	language.Add( "tool.nebsupporter.desc", "Supports Neb Support 3" )
 	language.Add( "tool.nebsupporter.0", "Left click to spawn shit, right click to link shit, reload to break links." )
 	language.Add( "tool.nebsupporter.1", "Right click another ent to create the link." )
-	
+
 	language.Add( "Undone_ns3_storage", "Undone NS3 Storage" )
 	language.Add( "Undone_ns3_generator", "Undone NS3 Generator" )
 	language.Add( "Undone_ns3_utility", "Undone NS3 Utility Device" )
@@ -35,17 +35,17 @@ function NebSupporterLC( self, trace )
 	local tar = trace.Entity
 	if !tar or tar:IsPlayer() then return false end
 	if CLIENT then return true end
-	
+
 	local ply = self:GetOwner()
 	local model			= self:GetClientInfo("model")
 	local type			= self:GetClientInfo("type")
 	local res			= self:GetClientInfo("resource")
 	local doweld		= (self:GetClientNumber("doweld") != 0)
 	local rotate90		= (self:GetClientNumber("rotate90") != 0)
-	
+
 	// We shot an existing sensor - just change its values
 	//if ( trace.Entity:IsValid() && trace.Entity:GetClass() == "mv_soundemitter" && trace.Entity:GetTable():GetPlayer() == ply ) then
-	
+
 	local Ang = trace.HitNormal:Angle()
 	Ang.pitch = Ang.pitch + (rotate90 and 90 or 0)
 
@@ -55,7 +55,7 @@ function NebSupporterLC( self, trace )
 	elseif type == "Generator" then
 		local underscore = string.find(res, "_")
 		local style
-		if underscore then 
+		if underscore then
 			style = string.sub(res,underscore+1)
 			res = string.sub(res,0,underscore-1)
 		end
@@ -71,22 +71,22 @@ function NebSupporterLC( self, trace )
 	undo.AddEntity( ent )
 	if doweld and IsValid(tar) then
 		weld = constraint.Weld( tar, ent, trace.PhysicsBone, 0, 0, !tar:IsWorld() )
-		weld:CallOnRemove("TempSleep", function(_,id) 
-			if IsValid(ent) && IsValid(ent:GetPhysicsObject()) then 
-				ent:GetPhysicsObject():EnableMotion(false) 
-				timer.Create(id.."Wakeup", 1, 1, function() if IsValid(ent) then ent:GetPhysicsObject():EnableMotion(true) end end) 
-			end 
+		weld:CallOnRemove("TempSleep", function(_,id)
+			if IsValid(ent) && IsValid(ent:GetPhysicsObject()) then
+				ent:GetPhysicsObject():EnableMotion(false)
+				timer.Create(id.."Wakeup", 1, 1, function() if IsValid(ent) then ent:GetPhysicsObject():EnableMotion(true) end end)
+			end
 		end, ent:EntIndex())
 		undo.AddEntity( weld )
 		ply:AddCleanup( "ns3_"..string.lower(type), weld )
 	end
 	if tar:IsWorld() then ent:GetPhysicsObject():EnableMotion(false) end
-	
+
 	ply:AddCleanup( "ns3_"..string.lower(type), ent )
 	undo.SetPlayer( ply )
 	undo.Finish()
 	ent:GetPhysicsObject():Sleep()
-	
+
 	return true
 end
 function TOOL:LeftClick(trace) return NebSupporterLC( self, trace ) end
@@ -94,11 +94,11 @@ function TOOL:LeftClick(trace) return NebSupporterLC( self, trace ) end
 function NebSupporterRC( self, trace )
 	local tar = trace.Entity
 	if !IsValid(tar) or tar:IsPlayer() then return false end
-	
+
 	if CLIENT then return true end
 
 	if !self.FirstEnt then
-		if tar.Priority then 
+		if tar.Priority then
 			self.FirstEnt = tar
 		elseif NS3.HijackEnts[tar:GetClass()] then
 			NS3.HijackEnts[tar:GetClass()](tar)
@@ -121,11 +121,11 @@ function NebSupporterRC( self, trace )
 		end
 		local ent1, ent2 = tar, self.FirstEnt
 		self.FirstEnt = nil
-		if !IsValid(ent1) or !IsValid(ent2) then 
-			self:Hint("One of your ents died!") 
-			return false 
+		if !IsValid(ent1) or !IsValid(ent2) then
+			self:Hint("One of your ents died!")
+			return false
 		end
-		
+
 		for k,v in ipairs2(ent1.DaisyLinks) do if !IsValid(v) then table.remove(self.Links, k or 1) else ent2:Link(v) v:Link(ent2) end end
 		for k,v in ipairs2(ent2.DaisyLinks) do if !IsValid(v) then table.remove(self.Links, k or 1) else ent1:Link(v) v:Link(ent1) end end
 		if ent1.Priority == 1 && ent2.Priority == 1 then
@@ -136,7 +136,7 @@ function NebSupporterRC( self, trace )
 		ent2:Link(ent1)
 		self:Hint((ent1.Resource or "").." "..string.sub(ent1:GetClass(), 5).." ["..ent1:EntIndex().."] and "
 			..(ent2.Resource or "").." "..string.sub(ent2:GetClass(),5).." ["..ent2:EntIndex().."] have been linked.")
-		
+
 		self.FirstEnt = nil
 	end
 	return true
@@ -214,7 +214,7 @@ function MakeNS3Utility( ply, Pos, Ang, Model, Resource )
 	local ent = ents.Create( "ns3_utility" )
 	if !IsValid(ent) then return false end
 	ent:SetModel( Model )
-	
+
 	if Model == "models/slyfo/sat_rfg.mdl" then Ang.r = math.angnorm(Ang.r + 90) end
 	ent:SetAngles( Ang )
 	ent:SetPos( Pos )
@@ -238,12 +238,12 @@ if CLIENT then
 		local trace = self:GetOwner():GetEyeTrace()
 		local tar = trace.Entity
 		if !IsValid(tar) or !tar.Links then return end
-		
+
 		//local pos1 = {x = //trace.HitPos:ToScreen()
-		//pos1.x = pos1.x - 
+		//pos1.x = pos1.x -
 		surface.SetDrawColor(255, 255, 255, 80)
 		for k,v in pairs(tar.Links) do
-			if v:IsValid() then 
+			if v:IsValid() then
 				local pos2 = v:GetPos():ToScreen()
 				if pos1.visible or pos2.visible then
 					surface.DrawLine(pos1.x, pos1.y, pos2.x, pos2.y)
@@ -256,7 +256,7 @@ if CLIENT then
 			print(tar.Range)
 			render.DrawSprite( tar:GetPos(), tar.Range, tar.Range, Color( 0,0,100 * math.Clamp( lcolor.z, 0, 1 ), 50 ) )
 		end
-			
+
 	end
 	function TOOL:DrawHUD( ) NebSupporterDrawHUD(self) end
 
@@ -270,7 +270,7 @@ if CLIENT then
 				plist:RemoveItem(v)
 			end
 			table.Empty(Spawnicons)
-			
+
 			//Create spawnicons, add spawnicons to Grid and plist for easy clearing, send concmds
 			for k,v in ipairs(NS3[category.."Models"][kind]) do
 				local spawnicon = vgui.Create("SpawnIcon")
@@ -284,20 +284,20 @@ if CLIENT then
 				table.insert(Spawnicons, spawnicon)
 				plist:AddItem(spawnicon)
 			end
-			
+
 			//Fixes Grid size
 			plist:SizeToContents()
 			local _,height = plist:GetPos()
 			CPanel:SetTall(height + plist:GetTall())
 		end
-		
+
 
 		// Image
 		/*local image = CPanel:AddControl("DImage", {})
 		image:SetImage("VGUI/entities/npc_citizen_rebel")
 		image:SetSize(150,150)*/
 		local w,_ = CPanel:GetSize()
-		
+
 		CPanel:Help("All of NS3 is still very much a work in progress. If you have any complaints or suggestions please tell Nebual either in chat or via '!report Neb solar panels are broken'")
 		CPanel:CheckBox("Weld", "nebsupporter_doweld")
 
@@ -308,7 +308,7 @@ if CLIENT then
 		for _,category in pairs({"Storage","Generator","Utility"}) do
 			local cattree = tree:AddNode(category)
 			for kind,models in pairs(NS3[category.."Models"]) do
-				cattree:AddNode(kind).DoClick = function() 
+				cattree:AddNode(kind).DoClick = function()
 					AddSpawnIcons(category, kind)
 					RunConsoleCommand("nebsupporter_type", category)
 					RunConsoleCommand("nebsupporter_resource", kind)
@@ -324,7 +324,7 @@ if CLIENT then
 		plist:SetColWide(66)
 		plist:SetRowHeight(66)
 		CPanel:AddItem(plist)
-		
+
 		CPanel:CheckBox("Rotate Prop 90 degrees", "nebsupporter_rotate90")
 	end
 
@@ -349,25 +349,25 @@ function TOOL:UpdateGhost( ent, ply )
 		ent:SetNoDraw( true )
 		return
 	end
-	
+
 	local rotate90		= (self:GetClientNumber("rotate90") != 0)
 	local Ang = trace.HitNormal:Angle()
 	Ang.pitch = Ang.pitch + (rotate90 and 90 or 0)
 	ent:SetAngles( Ang )
 	ent:SetPos( trace.HitPos - trace.HitNormal * ent:OBBMins().z )
 	ent:SetNoDraw( false )
-	
+
 	if CLIENT then
-		local range = NS3.UtilityModels[ent:GetModel()] 
+		local range = NS3.UtilityModels[ent:GetModel()]
 		if range then
-			if !ball then 
+			if !ball then
 				ball = ClientsideModel("models/hunter/misc/shell2x2.mdl", RENDERGROUP_OPAQUE)
 				ball:SetMaterial("models/shiny")
 			end
 			ball:SetColor(Color(0,0,100,100))
 			ball:SetPos(ent:GetPos())
 			SetScale(ball, Vector(math.Max(range / 95, 0.01), math.Max(range / 95, 0.01), math.Max(range / 95, 0.01)))
-			timer.Create("ResetNebsupporterBall",0.1,1,function() 
+			timer.Create("ResetNebsupporterBall",0.1,1,function()
 				ball:SetColor(Color(0,0,0,0))
 			end)
 		end
@@ -380,7 +380,7 @@ function TOOL:Think()
 	if !util.IsValidProp(model) then util.PrecacheModel( model ) return end
 	if !IsValid(self.GhostEntity) or self.GhostEntity:GetModel() != model then
 		self:MakeGhostEntity( model, Vector(0,0,0), Angle(0,0,0) )
-		if IsValid(self.GhostEntity) then 
+		if IsValid(self.GhostEntity) then
 			if CLIENT then self.GhostEntity:SetPredictable(true) end
 			if NS3.EntMaterials[model] then self.GhostEntity:SetMaterial(NS3.EntMaterials[model]) end
 		end

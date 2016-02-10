@@ -68,10 +68,10 @@ function ENT:SetActive( value, caller )
 		Wire_TriggerOutput(self.Entity, "On", BoolNum(self.Active))
 	else
 		self.Active = nil
-		
+
 		if self.IdleSound then self.Entity:StopSound( self.IdleSound ) end
 		if self.IdleSound2 then self.Entity:StopSound( self.IdleSound2 ) end
-		
+
 		if !self.Mute then self.Entity:EmitSound( "Airboat_engine_stop" ) end
 		self.Overlay = self.OverlayBase .. ": Off!"
 		Wire_TriggerOutput(self.Entity, "On", BoolNum(self.Active))
@@ -87,9 +87,9 @@ end
 
 function ENT:TriggerInput(iname, value) -- Wiremod Inputs
 	if iname == "On" then self:SetActive(value)
-	elseif iname == "Mute" then 
+	elseif iname == "Mute" then
 		self.Mute = value != 0
-		if self.Mute then 
+		if self.Mute then
 			if self.IdleSound then self.Entity:StopSound( self.IdleSound ) end
 			if self.IdleSound2 then self.Entity:StopSound( self.IdleSound2 ) end
 		else self:SetActive(self.Active)
@@ -100,7 +100,7 @@ end
 // Todo: Make sure the link tool garbagecollects on EntityRemoved
 util.AddNetworkString("NS3_Links")
 function ENT:BroadcastLinks()
-	timer.Create("NS3_Links"..self:EntIndex(), 0.5, 1, function() 
+	timer.Create("NS3_Links"..self:EntIndex(), 0.5, 1, function()
 		net.Start("NS3_Links")
 			net.WriteEntity(self)
 			local tab = table.Copy(self.Links) or {}
@@ -233,14 +233,14 @@ function ENT:PostEntityPaste( Player, Ent, CreatedEntities )
 	if tab then
 		Ent.Links = {}
 		Ent.DaisyLinks = {}
-		for k,v in pairs(tab.Links) do 
+		for k,v in pairs(tab.Links) do
 			local otherent = CreatedEntities[v]
 			table.insert(Ent.Links, otherent)
 			if !otherent.Priority and NS3.HijackEnts[otherent:GetClass()] then NS3.HijackEnts[otherent:GetClass()](otherent) end // Sets up chairs and such
 		end
 		table.sort(Ent.Links, function(a,b) if a.Priority > b.Priority then return b end end)
 		for k,v in pairs(tab.DaisyLinks) do table.insert(Ent.DaisyLinks,CreatedEntities[v]) end
-		
+
 		self:BroadcastLinks()
 	//	self.Resource = tab.Resource
 	//	if tab.Style then self.Style = tab.Style end

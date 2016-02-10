@@ -49,7 +49,7 @@ function NS3.TrackNS3Ent(ent)
 	if IsValid(ent) and ent:EntIndex() > 20 then
 		timer.Create("TrackNS3Ent_"..ent:EntIndex(), 0.15, 1, function()
 			if !IsValid(ent) or ent:EntIndex() == 0 or !IsValid(ent:GetPhysicsObject()) or ent:IsNPC() or ent:IsPlayer() or !ent:GetModel() or ent.CDSIgnore or ent:GetClass() == "gmod_ghost" or string.sub(ent:GetClass(), 1, 4) == "func" then
-				table.insert(NS3.TrackedEnts, ent) 
+				table.insert(NS3.TrackedEnts, ent)
 			end
 		end)
 	end
@@ -70,7 +70,7 @@ function NS3.InitNS3()
 			for k, ply in pairs(player.GetAll()) do
 				local success,msg = pcall(NS3.EnvironmentCheckOnPlayer,ply)
 				if !success then ErrorNoHalt("NS3_SimpleEnvCheck Error: Ply["..ply:EntIndex().."] "..msg) end
-			end 
+			end
 		end)
 	end
 end
@@ -147,7 +147,7 @@ function NS3.EnvironmentCheckOnPlayer(ply)
 		end
 		if ply.Environment:GetTemperature(ply) > 5000 then ply:SilentKill() return end // Pretty sure this is for stars
 		NS3.UpdateGravity(ply)
-		
+
 		-- =======================
 		-- Temperatures
 		-- =======================
@@ -179,15 +179,15 @@ function NS3.EnvironmentCheckOnPlayer(ply)
 			ply:TakeDamage(math.Min(math.abs(difftemp)/20,10), 0)
 			print(ply:Nick()..difftemp)
 			if ply:Health() <= 0 then
-				ply:StopSound( "NPC_Stalker.BurnFlesh" ) 
+				ply:StopSound( "NPC_Stalker.BurnFlesh" )
 				ply:EmitSound( "NPC_Stalker.BurnFlesh" )
 				ply:SetModel("models/player/charple01.mdl")
 				timer.Create("StopBurningNoise_"..ply:EntIndex(),3,1, function() if IsValid(ply) then ply:StopSound( "NPC_Stalker.BurnFlesh" ) end end)
 				return -- They're dead, Jim
 			elseif math.random(1,2) == 2 then -- Just to avoid spamming the sound
-				if ply.Suit.Temperature < 255 then ply:EmitSound( "vehicles/v8/skid_lowfriction.wav" ) 
-				else 
-					ply:StopSound( "NPC_Stalker.BurnFlesh" ) 
+				if ply.Suit.Temperature < 255 then ply:EmitSound( "vehicles/v8/skid_lowfriction.wav" )
+				else
+					ply:StopSound( "NPC_Stalker.BurnFlesh" )
 					ply:EmitSound( "NPC_Stalker.BurnFlesh" )
 					timer.Create("StopBurningNoise_"..ply:EntIndex(),3,1, function() if IsValid(ply) then ply:StopSound( "NPC_Stalker.BurnFlesh" ) end end)
 				end
@@ -203,20 +203,20 @@ function NS3.EnvironmentCheckOnPlayer(ply)
 				--Reddish Tint Hud Effect
 			//end
 		end
-		
+
 		-- =======================
 		-- Breathin
 		-- =======================
-		if !ply.Environment.IsSpace and (ply.Environment.Resources.Oxygen / ply.Environment.Max) >0.10 and ply:WaterLevel()<3 then 
+		if !ply.Environment.IsSpace and (ply.Environment.Resources.Oxygen / ply.Environment.Max) >0.10 and ply:WaterLevel()<3 then
 			local cost = math.Max(5 * ply.Environment.Pressure, 5)
 			if ply.Suit.Oxygen < 30 or (!ply.Suit.VisorDown and ply.Suit.Oxygen < ((ply.Environment.Resources.Oxygen / ply.Environment.Max)*suitmax)) then ply.Suit.Oxygen = ply.Suit.Oxygen + 5 cost = cost + 5 end
 			ply.Environment.Resources.Oxygen = ply.Environment.Resources.Oxygen - cost
 			ply.Environment.Resources.CarbonDioxide = ply.Environment.Resources.CarbonDioxide + cost
 			ply.Suit.HasAir=true
-		else 
+		else
 			local airreg = footent.Air_Regulator
-			if IsValid(airreg) and airreg.Active then 
-				ply.Suit.HasAir = airreg:Regulate(ply) 
+			if IsValid(airreg) and airreg.Active then
+				ply.Suit.HasAir = airreg:Regulate(ply)
 				if ply.Suit.HasAir and (ply.Suit.Oxygen < 30 or (!ply.Suit.VisorDown and ply.Suit.Oxygen < ((ply.Environment.Resources.Oxygen / ply.Environment.Max)*suitmax))) and airreg:Regulate(ply) then ply.Suit.Oxygen = ply.Suit.Oxygen + 5 end
 			end
 		end
@@ -227,7 +227,7 @@ function NS3.EnvironmentCheckOnPlayer(ply)
 			ply.Environment.Resources.CarbonDioxide = ply.Environment.Resources.CarbonDioxide + cost
 			ply.Suit.Oxygen=math.Max(ply.Suit.Oxygen-cost, 0)
 		end
-		
+
 		ply:SetDSP(DSP) // Sound effects, like echoy space I KNOW THERES NO SOUND IN SPACE STFU
 	else
 		ply.Suit.HasAir=true
@@ -237,30 +237,30 @@ function NS3.EnvironmentCheckOnPlayer(ply)
 			if IsValid(airreg) and airreg.Active then ply.Suit.HasAir = airreg:Regulate(ply) end
 			if !ply.Suit.HasAir then
 				if ply.Suit.Oxygen > 0 then
-					ply.Suit.Oxygen = math.Max(ply.Suit.Oxygen - 5, 0) 
+					ply.Suit.Oxygen = math.Max(ply.Suit.Oxygen - 5, 0)
 					ply.Suit.HasAir = true
 				end
 			end
 		elseif ply.Suit.Oxygen < 60 then ply.Suit.Oxygen = math.Min(ply.Suit.Oxygen + 5, 60) end
 	end
-	if !ply.Suit.HasAir then 
+	if !ply.Suit.HasAir then
 		ply:TakeDamage( 10, 0 )
 		if ply:Health() <= 0 then ply:EmitSound("player/drown"..math.random(1,3)..".wav")
-		else ply:EmitSound( "player/pl_drown"..math.random(1,3)..".wav" ) // "Player.DrownStart" end	
+		else ply:EmitSound( "player/pl_drown"..math.random(1,3)..".wav" ) // "Player.DrownStart" end
 		end
 	end
-	
+
 	if !ply.Suit.VisorDown and ply:WaterLevel() > 1 and ply.Suit.Coolant < 90 then
 		ply.Suit.Coolant = ply.Suit.Coolant + 5
 		if !ply.Suit.watersound then -- Only play the sound once (it loops), since we keep resetting the timer it'll continuously play until they get out of the water or are full
 			ply.Suit.watersound = CreateSound(ply, "ambient/water/water_run1.wav" )
-			
+
 			ply.Suit.watersound:Play()
 			ply.Suit.watersound:ChangeVolume(0.3,0.25)
 		end
 		timer.Create("FadeWaterSound_"..ply:Nick(),1.1,1,function() ply.Suit.watersound:FadeOut(0.5) ply.Suit.watersound = nil end)
 	end
-	
+
 	NS3.UpdateLSClient(ply)
 end
 

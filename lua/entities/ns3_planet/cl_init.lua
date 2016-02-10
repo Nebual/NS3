@@ -75,12 +75,12 @@ net.Receive("ns3_setplanet",function( netlen )
 	local tmp = net.ReadFloat() if tmp != 0 then ent.mSphereDualAlpha = tmp else ent.mSphereDualAlpha = 0.4 end
 	local tmp = net.ReadFloat() if tmp != 0 then ent.rotationSpeed = tmp else ent.rotationSpeed = 0.025 end
 
-	
+
 	if (radius != 0 && radius != ent.Radius) then
 		ent.Radius = radius
 		ent:SetModelScale( vector_origin )
 		ent:SetRenderBounds( Vector(2000,2000,2000), Vector(-2000,-2000,-2000) ) -- <-- In gmod12, anything larger than this often didn't work, but it DOES need to be larger...
-		timer.Create("NCPhys_"..ent:EntIndex(),0.8,1,function() 
+		timer.Create("NCPhys_"..ent:EntIndex(),0.8,1,function()
 			-- Hence this weird workaround existed... might be better in 13!
 			ent:SetRenderBounds( Vector(ent.Radius,ent.Radius,ent.Radius), Vector(-ent.Radius,-ent.Radius,-ent.Radius) )
 			ent:SetRenderBounds( Vector(ent.Radius,ent.Radius,ent.Radius), Vector(-ent.Radius,-ent.Radius,-ent.Radius) )

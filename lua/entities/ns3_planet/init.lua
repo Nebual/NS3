@@ -33,7 +33,7 @@ function ENT:CreateEnvironment(radius, gravity, atmosphere, pressure, shadetemp,
 	if self.NeedsLuaModel then -- Nothing automatically sets this yet, it was just in alpha
 		// If the planet is being created by an lua script, it won't have a physical counterpart from hammer, so we'll need to invent it one!
 		self:SetNoDraw(false)
-		
+
 		self.Size = Vector(self.Radius,self.Radius,1)
 		if !self.GasGiant then -- Gas giants have no collisions
 			self:SetNotSolid(false)
@@ -42,7 +42,7 @@ function ENT:CreateEnvironment(radius, gravity, atmosphere, pressure, shadetemp,
 			self.Entity:GetPhysicsObject():EnableMotion(false)
 			self.Entity:SetSolid(SOLID_BBOX) -- May need to be SOLID_CUSTOM in gmod13
 		end
-		
+
 		timer.Create("LuaPlanet_"..self:EntIndex(), 0.5, 1, function() -- Delayed so the client can hear the Ent is created via source
 			net.Start("ns3_setplanet")
 				net.WriteUInt(self:EntIndex(), 16)
@@ -57,7 +57,7 @@ function ENT:CreateEnvironment(radius, gravity, atmosphere, pressure, shadetemp,
 			net.Broadcast()
 		end)
 	end
-	
+
 	if littemp != 0 then self.TemperatureLit = littemp end
 	self.Temperature = shadetemp or 288
 	self.Gravity = gravity or 0.99
@@ -194,9 +194,9 @@ function ENT:OnEnvironment(ent)
 end
 
 function ENT:OnRemove()
-	if self.IsStar then 
+	if self.IsStar then
 		for k,v in pairs(NS3.Stars) do if v == self.Entity then table.remove(NS3.Stars,k) end end
-	else 
+	else
 		for k,v in pairs(NS3.Planets) do if v == self.Entity then table.remove(NS3.Planets,k) end end
 		timer.Remove("NS3_Planet_RefreshWater_"..self:EntIndex())
 	end
