@@ -21,7 +21,7 @@ end
 
 function ENT:Setup()
 	if self.Resource != "Energy" && self.Resource != "Fuel" && self.Resource != "Water" then WireLib.CreateInputs(self.Entity, { "Vent" }) end
-	WireLib.CreateSpecialOutputs(self.Entity, {"Current", "Max", "Quality", "Resource"},{"NORMAL","NORMAL","NORMAL","STRING"})
+	WireLib.CreateSpecialOutputs(self.Entity, {"Current", "Max", "Resource"},{"NORMAL","NORMAL","STRING"})
 	WireLib.TriggerOutput(self.Entity, "Resource", self.Resource)
 	
 	if self.Resource == "Energy" then 
@@ -43,7 +43,8 @@ function ENT:AcceptInput(name,activator,caller) -- Things like E
 end
 
 function ENT:TriggerInput(iname, value) -- Wiremod Inputs
-	if iname == "Vent" then self.Venting = (value != 0) and 1
+	if iname == "Vent" then
+		self.Venting = (value != 0) and 1
 	//elseif iname == "Mute" then self.Mute = value != 0
 	end
 end
@@ -55,12 +56,10 @@ function ENT:Think()
 	self.OverlayWarning = ""
 	
 	self:StoreCollectResources() -- Add our self.Receiving to our self.Resources
-	self.Requesting[self.Resource] = self.Max - self.Resources[self.Resource][1]
-	if self.Resources[self.Resource][1] != 0 then 
-		local remainingresources = self:SendResources({self.Resource, self.Resources[self.Resource][1],self.Resources[self.Resource][2]})
-		self.Resources[self.Resource] = {remainingresources[2],remainingresources[3]}
-	else // We've no resource left
-		self.Resources[self.Resource][2] = 0 // Set quality to 0 so it displays more sensical
+	self.Requesting[self.Resource] = self.Max - self.Resources[self.Resource]
+	if self.Resources[self.Resource] != 0 then
+		local remainingresources = self:SendResources({self.Resource, self.Resources[self.Resource]})
+		self.Resources[self.Resource] = remainingresources[2]
 	end
 	
 	if self.Namage then
@@ -75,15 +74,14 @@ function ENT:Think()
 	end
 	if self.Venting then
 		if !self.VentingNoise:IsPlaying() then self.VentingNoise:Play() end
-		local subtracted = math.min(round(self.Max * self.Venting / 20), self.Resources[self.Resource][1])
+		local subtracted = math.min(round(self.Max * self.Venting / 20), self.Resources[self.Resource])
 		self.Environment.Resources[self.Resource] = self.Environment.Resources[self.Resource] + subtracted
-		self.Resources[self.Resource][1] = self.Resources[self.Resource][1] - subtracted
+		self.Resources[self.Resource] = self.Resources[self.Resource] - subtracted
 	else self.VentingNoise:Stop()
 	end
 
-	WireLib.TriggerOutput(self.Entity, "Current", self.Resources[self.Resource][1])
-	WireLib.TriggerOutput(self.Entity, "Quality", self.Resources[self.Resource][2])
-	self.OverlayStatus = round(self.Resources[self.Resource][1]).."/"..self.Max.." "..round(self.Resources[self.Resource][1]*100 / self.Max,1).."%! Quality: "..round(self.Resources[self.Resource][2]*100,1).."%"
+	WireLib.TriggerOutput(self, "Current", self.Resources[self.Resource])
+	self.OverlayStatus = round(self.Resources[self.Resource]) .. "/" .. self.Max .. " " .. round(self.Resources[self.Resource] * 100 / self.Max, 1) .. "%"
 	self:UpdateOverlayText()
 	return true
 end

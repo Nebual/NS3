@@ -40,11 +40,11 @@ function ENT:Initialize()
 	self.Entity:SetSolid( SOLID_VPHYSICS )
 	//self.Entity:GetPhysicsObject():Wake()
 	if self.Entity:GetPhysicsObject():GetMass() < 20 then self.Entity:GetPhysicsObject():SetMass(30) end
-	
+
 	-- Incase we don't have environments, like on gm_ maps, give the generator its own 'planet' to harvest from
-	self.Environment = {Resources = {Empty = 0}, Max = 4000000,Atmosphere=1} 
+	self.Environment = {Resources = {Empty = 0}, Max = 4000000, Atmosphere = 1, Gravity = 1}
 	for k,_ in pairs(NS3.Resources) do self.Environment.Resources[k] = 1000000 end
-	
+
 	self.Resource = self.Resource or ""
 	self.Requesting = {}
 	self.Links = {}
@@ -136,22 +136,17 @@ function ENT:CollectResources()
 	// Ooh what did we get :D
 	local fuels = table.Copy(NS3.Resources)
 	for k,v in ipairs(self.Receiving) do
-		fuels[v[1]] = self:MergeResource(fuels[v[1]], v[2], v[3])
+		fuels[v[1]] = fuels[v[1]] + v[2]
 	end
 	self.Receiving = {}
 	return fuels
 end
-function ENT:StoreCollectResources() 
+function ENT:StoreCollectResources()
 	-- Direct deposit into self.Resources
 	for k,v in ipairs(self.Receiving) do
-		self.Resources[v[1]] = self:MergeResource(self.Resources[v[1]], v[2], v[3])
+		self.Resources[v[1]] = self.Resources[v[1]] + v[2]
 	end
 	self.Receiving = {}
-end
-function ENT:MergeResource(tab, amt, quality)
-	//print("Adding "..amt.." "..quality)
-	if !amt or amt == 0 then return {tab[1] or 0, tab[2] or 1} end
-	return {(tab[1] or 0) + amt, ((tab[1] or 0) * (tab[2] or 1) + amt * quality) / ((tab[1] or 0) + amt)}
 end
 function ENT:SendResources(product)
 	-- Ship it out to our linked ents
@@ -162,9 +157,9 @@ function ENT:SendResources(product)
 			local req = v.Requesting[res]
 			if req && (self.Priority != 1 or v.Priority != 1) then
 				-- Are they requesting our resource, and are both of us not storage units?
-				if req < product[2] then 
+				if req < product[2] then
 					v.Requesting[res] = nil
-					table.insert(v.Receiving, {product[1], req, product[3]})
+					table.insert(v.Receiving, {product[1], req})
 					product[2] = product[2] - req
 				else
 					v.Requesting[res] = req - product[2]

@@ -15,20 +15,20 @@ local round = math.Round
 function ENT:Initialize()
 	self.BaseClass.Initialize(self)
 	self.Entity:NextThink( round(CurTime()) + 2 )
-	
+
 	self.Priority = self.Priority or 5
 	self.Efficiency = self.Efficiency or math.Rand(0.4,0.5) // Oxygen should be 2, hydrogen 3, etc. Harder ones higher
 	self.RandomFactor = self.RandomFactor or 0.15
 	self.Speed = round(round(self.Entity:GetPhysicsObject():GetVolume() ^ 0.46 * 3.75) * 0.05)
-	self.Receiving[1] = {"Energy", 1, 1}
+	self.Receiving[1] = {"Energy", 1}
 	self.Productivity = {}
 	self.IdleSound2 = "Airboat_engine_idle"
-	
+
 	-- Default Settings which get overriden by specific generators (IE hydro generator can't be waterphobic or it wouldn't load!)
 	self.WaterPhobic = self.WaterPhobic or true
 	self.WaitsForResources = self.WaitsForResources or true
 	self.MustBeActive = self.MustBeActive or true
-	
+
 	self.OverlayBase =  "NS3 Unspecified Generator Device"
 end
 
@@ -51,8 +51,6 @@ function ENT:Setup()
 	elseif self.Style == "Condenser" then
 		// Water Condenser: 
 		self.Efficiency = 15
-	
-		// this was for the Quality Upscaler self.WaitsForResources = false -- cause it accepts many resources
 	elseif self.Style == "Kinetic" then
 		self.Mute = true
 	elseif self.Resource == "Plant" then
@@ -92,7 +90,7 @@ local function EndThink(self)
 	local val = 0
 	for k,v in pairs(self.Productivity) do val = val + v end
 	local productivity = round(val * 100 / #self.Productivity)
-	self.OverlayStatus = "Productivity: "..productivity.."%"
+	self.OverlayStatus = "Productivity: " .. round(self.TickProductivity * 100) .. "% (" .. productivity .. "% avg)"
 	WireLib.TriggerOutput(self.Entity, "Productivity", productivity)
 	self:UpdateOverlayText()
 	return true
@@ -151,7 +149,7 @@ function ENT:Think()
 end
 
 /*   About writing new generators:
-Please return {self.Resource (which is "Energy" or "Water"), the amount of resource produced, and the quality (0 - 1)}
+Please return {self.Resource (which is "Energy" or "Water"), the amount of resource produced}
 self.Speed is meant to be the main static multiplier for how much resource to produce, which integrates generator model size.
 
 All non-energy generators are assumed to cost energy based on (ResourceProduced * self.Efficiency (default 0.5))
@@ -161,8 +159,8 @@ All non-energy generators are assumed to cost energy based on (ResourceProduced 
 -- ProduceResource is basically the custom "think" of each generator
 ENT.Lists.ProduceResource = {
 	Default = function(self)
-		local fuels = self:CollectResources() -- Get our self.Receiving to find the Energy quality
-		return {self.Resource, self.Speed * math.Rand(1-self.RandomFactor,1+self.RandomFactor), fuels.Energy[2] * 0.9} -- {"Energy", 5, 1} is 5watts of 100% quality energy
+		local fuels = self:CollectResources()
+		return {self.Resource, self.Speed * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
 	end,
 	Energy_Solar = function(self)
 		local traces = NS3.SunTrace(self.Entity, true)
@@ -170,29 +168,28 @@ ENT.Lists.ProduceResource = {
 			--solar panel produces energy // TODO: make 90 degree pitch fail (rather than giving 25%)
 			local output = 0
 			for k,trace in pairs(traces) do output = output + ((self.Entity:GetUp() + trace.HitNormal).z / 2)^2 end
-			
+
 			if output < 0.05 then self:SetActive(false) return end
 			self:SetActive(true)
 			self.OverlayWarning = "Power: "..round(output*100) .."%"
-			return {"Energy", self.Speed * math.Rand(1-self.RandomFactor,1+self.RandomFactor) * output, 0.9}
+			return {"Energy", self.Speed * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor) * output}
 		end
 	end,
 	Energy_Coal = function(self)
 		local fuels = self:CollectResources()
-		local product = {self.Resource, self.Speed * 3 * math.Rand(1-self.RandomFactor,1+self.RandomFactor), fuels.Fuel[2] * math.Rand(0.7,0.8)}
+		local product = {self.Resource, self.Speed * 3 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
 		self.Requesting.Fuel = product[2] * self.Efficiency
 		return product
 	end,
 	Energy_NaturalGas = function(self)
 		local fuels = self:CollectResources()
-		if fuels.Fuel[2] < 0.95 then return end -- Low quality fuel? No soup for you! >:~O
-		local product = {self.Resource, self.Speed * 8 * math.Rand(1-self.RandomFactor,1+self.RandomFactor), fuels.Fuel[2] * (1-(math.random(0,4)*0.005))}
+		local product = {self.Resource, self.Speed * 8 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
 		self.Requesting.Fuel = product[2] * 0.4 * self.Efficiency
 		return product
 	end,
 	Energy_Hydro = function(self)
 		local mul = 1
-		if !self.Pulse then 
+		if !self.Pulse then
 			self.Pulse = 1
 			timer.Create("NS3_Pulse_"..self:EntIndex(), math.Rand(8,22), 1, function() if !self:IsValid() or !self.Active then return end
 				self.Pulse = math.Rand(4,11)
@@ -204,33 +201,33 @@ ENT.Lists.ProduceResource = {
 		end
 		if self:WaterLevel() > 1 then 
 			//self.Entity:EmitSound( self.IdleSound2,100,50 + mul*50, 20 + mul*80 )
-			return {self.Resource, self.Speed * mul * 0.25, 0.85} 
-		else 
+			return {self.Resource, self.Speed * mul * 0.25}
+		else
 			//self.Entity:StopSound( self.IdleSound2 )
 			self.OverlayWarning = "Generator must be submerged!"
 			self:SetActive(false) -- Should I be switching it off?
 		end 
 	end,
-	Energy_Wind = function(self) 
-		return {self.Resource, self.Speed * self.Environment.Atmosphere * 0.2 * math.Rand(1-self.RandomFactor,1+self.RandomFactor*2),0.6} 
+	Energy_Wind = function(self)
+		return {self.Resource, self.Speed * self.Environment.Atmosphere * 0.2 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor*2)}
 	end,
 	Energy_Kinetic = function(self) 
 		// Basically this is just so people shove some moving parts on their plane which look steampunky, also it has a rather low max energy output cause people will probably just thruster these.
 		local spd = self:GetPhysicsObject():GetAngleVelocity():Length()
 		if spd > 10 then
-			return {self.Resource, self.Speed * (math.Min(spd,400) ^ 1.5)/8000  * math.Rand(1-self.RandomFactor,1+self.RandomFactor),0.6} 
+			return {self.Resource, self.Speed * (math.Min(spd,400) ^ 1.5)/8000  * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
 		end
 	end,
 	-- Energy_Fusion 
 	// NEEDS TO BE HARD TO DO (only turns on for a few seconds, thus needs complex wiring to properly maintain)
 	Fuel_Pump = function(self)
 		// TODO: Make this way cooler with deposits of fuel and shit
-		if math.random(1,4) == 1 then return {self.Resource, self.Speed, 0.7} end 
+		if math.random(1,4) == 1 then return {self.Resource, self.Speed} end
 	end,
 	LiquidNitrogen = function(self)
 		local fuels = self:CollectResources()
-		
-		local ret = {self.Resource,self.Speed*0.9,(fuels.Nitrogen[2] + fuels.Energy[2]) * 0.45}
+
+		local ret = {self.Resource, self.Speed * 0.9}
 		self.Requesting.Nitrogen = self.Speed
 		return ret
 	end,
@@ -240,34 +237,39 @@ ENT.Lists.ProduceResource = {
 		if self.Environment.Resources.Water < self.Speed * 0.5 then self:LowResource("water levels in lake!") return end
 		self.OverlayWarning = nil
 		self.Environment.Resources.Water = self.Environment.Resources.Water - self.Speed * 0.5
-		return {self.Resource, self.Speed * 0.3, 0.85}
+		return {self.Resource, self.Speed * 0.3}
 	end,
 	Water_Condenser = function(self)
 		self.Entity:NextThink( round(CurTime()) + math.random(2,6) + 0.95 )
-		
+
 		if self.Environment.Resources.Hydrogen / self.Environment.Max > 0.005 && self.Environment.Resources.Oxygen / self.Environment.Max > 0.06 then
 			self.Environment.Resources.Hydrogen = self.Environment.Resources.Hydrogen - 2
 			self.Environment.Resources.Oxygen = self.Environment.Resources.Oxygen - 1
-			return {self.Resource, 1, 0.95}
+			return {self.Resource, 1}
 		end
 	end,
 	Plant = function(self)
 		if self.Watered < 1 then self.OverlayWarning = "Out of water!" return
 		else self.OverlayWarning = "Water: "..math.Round(self.Watered / 0.3).."%" end
-		
-		if math.random(1,5) != 1 then self.TickProductivity = self.PlantTickProductivity return end 
+
+		if math.random(1,5) != 1 then self.TickProductivity = self.PlantTickProductivity return end
 		local fuels = self:CollectResources()
-		
+
 		local availres = self.Environment.Resources.CarbonDioxide / self.Environment.Max
-		if availres == 0 then self.OverlayWarning = "No natural Carbon Dioxide present!" produce = (fuels.CarbonDioxide[2]) * math.Rand(1-self.RandomFactor,1+self.RandomFactor)
-		elseif availres > 0.5 then produce = (fuels.CarbonDioxide[2] + self.Speed * 2) * math.Rand(1-self.RandomFactor,1+self.RandomFactor) -- If theres lots, purification is easy
-		elseif availres > 0.2 then produce = (fuels.CarbonDioxide[2] + self.Speed) * math.Rand(1-self.RandomFactor,1+self.RandomFactor)
-		elseif availres > 0.125 then produce = (fuels.CarbonDioxide[2] + self.Speed * 0.6) * math.Rand(1-self.RandomFactor,1+self.RandomFactor)
-		elseif availres > 0.05 then produce = (fuels.CarbonDioxide[2] + self.Speed * 0.3) * math.Rand(1-self.RandomFactor,1+self.RandomFactor)
-		elseif availres > 0.02 then produce = (fuels.CarbonDioxide[2] + self.Speed * 0.2) * math.Rand(1-self.RandomFactor,1+self.RandomFactor)
-		else produce = (fuels.CarbonDioxide[2] + self.Speed * 0.1) * math.Rand(1-self.RandomFactor,1+self.RandomFactor) -- If theres hardly any of a resource present, purification is hard
+		if fuels.CarbonDioxide > 0 then
+			availres = availres + (fuels.CarbonDioxide / self.Speed) / 2 -- Pumping in CO2 isn't as efficient as natural breathing, but can be used in addition to natural respiration
 		end
-		self.Environment.Resources["CarbonDioxide"] = self.Environment.Resources["CarbonDioxide"] - produce
+		if availres == 0 then
+			self.OverlayWarning = "No natural Carbon Dioxide present!"
+			produce = 0
+		elseif availres > 0.5 then produce = (self.Speed * 2) * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor) -- If theres lots, purification is easy
+		elseif availres > 0.2 then produce = (self.Speed) * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)
+		elseif availres > 0.125 then produce = (self.Speed * 0.6) * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)
+		elseif availres > 0.05 then produce = (self.Speed * 0.3) * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)
+		elseif availres > 0.02 then produce = (self.Speed * 0.2) * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)
+		else produce = (fuels.CarbonDioxide[2] + self.Speed * 0.1) * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor) -- If theres hardly any of a resource present, purification is hard
+		end
+		self.Environment.Resources["CarbonDioxide"] = self.Environment.Resources["CarbonDioxide"] - max(produce - fuels.CarbonDioxide, 0)
 		self.Environment.Resources["Oxygen"] = self.Environment.Resources["Oxygen"] + produce
 		self.Requesting.CarbonDioxide = self.Speed
 		self.Watered = self.Watered - math.Rand(0.15, 0.5)
@@ -277,21 +279,21 @@ ENT.Lists.ProduceResource = {
 	Oxygen = function(self)
 		-- Note: Is also H2/CO2/N2, see below
 		if self.Environment.IsSpace then self.OverlayWarning = "No natural resources present in space!" return end
-		local fuels = self:CollectResources() -- Get our self.Receiving to find the Energy quality
+		local fuels = self:CollectResources()
 		local product
-		
-		-- Quality is based on current saturation of the resource within the environment
+
+		-- Rate is based on current saturation of the resource within the environment
 		local availres = self.Environment.Resources[self.Resource] / self.Environment.Max
 		if availres == 0 then self.OverlayWarning = "No natural "..self.Resource.." present!" return
-		elseif availres > 0.5 then product = {self.Resource, self.Speed * 2 * math.Rand(1-self.RandomFactor,1+self.RandomFactor), fuels.Energy[2] * 0.95} -- If theres lots, purification is easy
-		elseif availres > 0.2 then product = {self.Resource, self.Speed * math.Rand(1-self.RandomFactor,1+self.RandomFactor), fuels.Energy[2] * 0.95}
-		elseif availres > 0.125 then product = {self.Resource, self.Speed * 0.6 * math.Rand(1-self.RandomFactor,1+self.RandomFactor), fuels.Energy[2] * 0.9}
-		elseif availres > 0.05 then product = {self.Resource, self.Speed * 0.4 * math.Rand(1-self.RandomFactor,1+self.RandomFactor), fuels.Energy[2] * 0.825}
-		elseif availres > 0.02 then product = {self.Resource, self.Speed * 0.25 * math.Rand(1-self.RandomFactor,1+self.RandomFactor), fuels.Energy[2] * 0.75}
-		else product = {self.Resource, self.Speed * 0.2 * math.Rand(1-self.RandomFactor,1+self.RandomFactor), fuels.Energy[2] * 0.65} -- If theres hardly any of a resource present, purification is hard
+		elseif availres > 0.5 then product = {self.Resource, self.Speed * 2 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)} -- If theres lots, purification is easy
+		elseif availres > 0.2 then product = {self.Resource, self.Speed * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
+		elseif availres > 0.125 then product = {self.Resource, self.Speed * 0.6 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
+		elseif availres > 0.05 then product = {self.Resource, self.Speed * 0.4 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
+		elseif availres > 0.02 then product = {self.Resource, self.Speed * 0.25 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
+		else product = {self.Resource, self.Speed * 0.2 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)} -- If theres hardly any of a resource present, purification is hard
 		end
 		self.Environment.Resources[self.Resource] = self.Environment.Resources[self.Resource] - product[2]
-		
+
 		return product
 	end,
 }

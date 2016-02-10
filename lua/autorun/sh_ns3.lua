@@ -11,7 +11,7 @@ if !NS3 then
 
 		//GeneratorVoltages = {"models/props_vehicles/generator.mdl" = 120},
 		-- Make a new resource entry for each new resource plz
-		Resources = {Energy = {0,1}, Oxygen = {0,1}, Hydrogen = {0,1}, CarbonDioxide = {0,1}, Nitrogen = {0,1}, LiquidNitrogen = {0,1}, Water = {0,1}, Fuel = {0,1}},
+		Resources = {Energy = 0, Oxygen = 0, Hydrogen = 0, CarbonDioxide = 0, Nitrogen = 0, LiquidNitrogen = 0, Water = 0, Fuel = 0},
 		Planets = {},
 		Stars = {},
 		Environments = {}, // Just Planets + stars

@@ -42,15 +42,14 @@ function ENT:Initialize()
 	self.Priority = self.Priority or 4
 	self.Efficiency = self.Efficiency or math.Rand(0.8,1.2) // Oxygen should be 2, hydrogen 3, etc. Harder ones higher
 	self.RandomFactor = self.RandomFactor or 0.15
-	
-	//self.Receiving[1] = {"Energy", 0, 1}
+
 	self.Resources = table.Copy(NS3.Resources)
 	self.FootBreaths = {}
 	self.LastWarned = 0
 	self.WaterPhobic = true
 	
 	-- Incase we don't have environments, like on gm_ maps, give the generator its own 'planet' to harvest from
-	self.Environment = {Resources = {Empty = 0}, Max = 4000000, Pressure = 1} 
+	self.Environment = {Resources = {Empty = 0}, Max = 4000000, Pressure = 1, Gravity = 1}
 	for k,_ in pairs(NS3.Resources) do self.Environment.Resources[k] = 1000000 end
 	
 	self.OverlayBase =  "NS3 Unspecified Utility Device"
@@ -273,29 +272,29 @@ ENT.Lists.SubThink = {
 	Default = function() return end, -- default to avoid nil errors
 	Air_Regulator = function(self)
 		if self.Active then
-			if self.Resources.Energy[1] < 5 then self:LowResource("energy") self:SetActive(false)
-			elseif self.Resources.Oxygen[1] < 5 then self:LowResource("oxygen")
+			if self.Resources.Energy < 5 then self:LowResource("energy") self:SetActive(false)
+			elseif self.Resources.Oxygen < 5 then self:LowResource("oxygen")
 			else
 				self.OverlayWarning = nil
-				self.Resources.Energy[1] = self.Resources.Energy[1] - 5
+				self.Resources.Energy = self.Resources.Energy - 5
 			end
 		end
-		self.Requesting.Energy = self.BufferSize - self.Resources.Energy[1]
-		self.Requesting.Oxygen = self.BufferSize * math.Max(1, self.Environment.Pressure or 1) - self.Resources.Oxygen[1]
-		self.Overlay3 = "Buffer: Energy "..round(self.Resources.Energy[1])..", Oxygen "..round(self.Resources.Oxygen[1])
+		self.Requesting.Energy = self.BufferSize - self.Resources.Energy
+		self.Requesting.Oxygen = self.BufferSize * math.Max(1, self.Environment.Pressure or 1) - self.Resources.Oxygen
+		self.Overlay3 = "Buffer: Energy " .. round(self.Resources.Energy) .. ", Oxygen " .. round(self.Resources.Oxygen)
 	end,
 	Heat_Regulator = function(self)
 		if self.Active then
-			if self.Resources.Energy[1] < 5 then self:LowResource("energy")
-			//elseif self.Resources.Water[1] < 5 then self:LowResource("coolant (water)")
+			if self.Resources.Energy < 5 then self:LowResource("energy")
+			//elseif self.Resources.Water < 5 then self:LowResource("coolant (water)")
 			else
 				self.OverlayWarning = nil
-				self.Resources.Energy[1] = self.Resources.Energy[1] - 5
+				self.Resources.Energy = self.Resources.Energy - 5
 			end
 		end
-		self.Requesting.Energy = self.BufferSize*2 - self.Resources.Energy[1]
-		self.Requesting.Water = self.BufferSize - self.Resources.Water[1]
-		self.OverlayStatus = "Buffer: Energy "..round(self.Resources.Energy[1])..", Water "..round(self.Resources.Water[1])
+		self.Requesting.Energy = self.BufferSize*2 - self.Resources.Energy
+		self.Requesting.Water = self.BufferSize - self.Resources.Water
+		self.OverlayStatus = "Buffer: Energy " .. round(self.Resources.Energy) .. ", Water " .. round(self.Resources.Water)
 	end,
 	Suit_Recharger = function(self)
 		if self.Active then
@@ -308,10 +307,10 @@ ENT.Lists.SubThink = {
 				local max = GetConVarNumber("ns3_suitmax")
 				local tab1 = {"Oxygen", "Energy", "Coolant"}
 				for k,v in ipairs({"Oxygen", "Energy", "Water"}) do
-					if ply.Suit[tab1[k]] < max && self.Resources[v][1] > 0 then 
-						local gain = math.Min(self.Speed,self.Resources[v][1])
-						ply.Suit[tab1[k]] = ply.Suit[tab1[k]] + gain*self.Resources[v][2]
-						self.Resources[v][1] = self.Resources[v][1] - gain
+					if ply.Suit[tab1[k]] < max && self.Resources[v] > 0 then
+						local gain = math.Min(self.Speed,self.Resources[v])
+						ply.Suit[tab1[k]] = ply.Suit[tab1[k]] + gain
+						self.Resources[v] = self.Resources[v] - gain
 						stop = false
 					end
 				end
@@ -322,11 +321,11 @@ ENT.Lists.SubThink = {
 				self.Active = nil
 			end
 		end
-	
-		self.Requesting.Energy = self.Max - self.Resources.Energy[1]
-		self.Requesting.Oxygen = self.Max - self.Resources.Oxygen[1]
-		self.Requesting.Water = self.Max - self.Resources.Water[1]
-		self.OverlayStatus = "Buffer: Energy "..round(self.Resources.Energy[1])..", Oxygen "..round(self.Resources.Oxygen[1])..", Water "..round(self.Resources.Water[1])
+
+		self.Requesting.Energy = self.Max - self.Resources.Energy
+		self.Requesting.Oxygen = self.Max - self.Resources.Oxygen
+		self.Requesting.Water = self.Max - self.Resources.Water
+		self.OverlayStatus = "Buffer: Energy " .. round(self.Resources.Energy) .. ", Oxygen " .. round(self.Resources.Oxygen) .. ", Water " .. round(self.Resources.Water)
 	end,
 	Planetary_Probe = function(self)
 		self.OverlayStatus = nil
@@ -366,15 +365,15 @@ ENT.Lists.SubThink = {
 		local maxes = {}
 		for k,v in pairs(self.Links) do
 			if IsValid(v) and v.Resources and v.Resource and v.Max then
-				resources[v.Resource][1] = (resources[v.Resource][1] or 0) + v.Resources[v.Resource][1]
+				resources[v.Resource] = (resources[v.Resource] or 0) + v.Resources[v.Resource]
 				maxes[v.Resource] = (maxes[v.Resource] or 0) + v.Max
 			end
 		end
-				
-		for _,v in pairs({"Energy", "Oxygen","CarbonDioxide","Nitrogen","Hydrogen", "Water"}) do 
-			WireLib.TriggerOutput(self.Entity, v, resources[v][1])
+
+		for _,v in pairs({"Energy", "Oxygen","CarbonDioxide","Nitrogen","Hydrogen", "Water"}) do
+			WireLib.TriggerOutput(self.Entity, v, resources[v])
 			WireLib.TriggerOutput(self.Entity, "Max "..v, maxes[v] or 0)
-			WireLib.TriggerOutput(self.Entity, "% "..v, 100 * resources[v][1] / (maxes[v] or 1))
+			WireLib.TriggerOutput(self.Entity, "% "..v, 100 * resources[v] / (maxes[v] or 1))
 		end
 	end,
 	Gravity_Regulator = function(self)
@@ -429,15 +428,15 @@ ENT.Lists.SubThink = {
 							if self.SpecificResource and self.SpecificResource != res then continue end
 							if request > 0 then
 								for _,donator in ipairs(self.Links) do // Look through all ents linked to sending socket to find a donor
-									if donator.Priority == 1 && donator.Resources[res][1] > 0 then
+									if donator.Priority == 1 && donator.Resources[res] > 0 then
 										hastransferred = true
 										local donation = math.Min(request, v.Max / 15)
-										table.insert(v.Receiving,{res,donation,donator.Resources[res][2]}) // give it to requestor
-										if donator.Resources[res][1] < donation then
-											donator.Resources[res] = {0,1} // take it from donator
+										table.insert(v.Receiving, {res,donation}) // give it to requestor
+										if donator.Resources[res] < donation then
+											donator.Resources[res] = 0 // take it from donator
 											request = request - donation // lower the request
 										else
-											donator.Resources[res][1] = donator.Resources[res][1] - donation 
+											donator.Resources[res] = donator.Resources[res] - donation
 											request = nil
 											break
 										end
@@ -447,7 +446,13 @@ ENT.Lists.SubThink = {
 						end
 					end
 				end
-				if hastransferred then self.SoundSpecial:ChangePitch(90,0.25) self.SoundSpecial:ChangeVolume(120,0.25) else self.SoundSpecial:ChangePitch(50,0.25) self.SoundSpecial:ChangeVolume(60,0.25) end
+				if hastransferred then
+					self.SoundSpecial:ChangePitch(90,0.25)
+					self.SoundSpecial:ChangeVolume(120,0.25)
+				else
+					self.SoundSpecial:ChangePitch(50,0.25)
+					self.SoundSpecial:ChangeVolume(60,0.25)
+				end
 			else
 				//self.PumpRequesting = {}
 				//for k,v in pairs(self.Links) do table.insert(self.PumpRequesting
@@ -519,8 +524,8 @@ ENT.Lists.Regulate = {
 	Air_Regulator = function(self, ply) // Returns true if it can handle the draw, false otherwise
 		local cost = 5
 		if ply.Environment then cost = math.Max(5 * ply.Environment.Pressure, 5) end
-		if self.Resources.Oxygen[1] >= cost then
-			self.Resources.Oxygen[1] = self.Resources.Oxygen[1] - cost
+		if self.Resources.Oxygen >= cost then
+			self.Resources.Oxygen = self.Resources.Oxygen - cost
 			self.Environment.Resources.CarbonDioxide = self.Environment.Resources.CarbonDioxide + cost
 			return true
 		end
@@ -529,12 +534,12 @@ ENT.Lists.Regulate = {
 		local temp = ply.Suit.Temperature
 		if temp > 295 then
 			// if nitro then use that else use below formulas
-			local diff = math.Min(math.Min(temp - 295, 15), self.Resources.Water[1])
-			self.Resources.Water[1] = self.Resources.Water[1] - diff
+			local diff = math.Min(math.Min(temp - 295, 15), self.Resources.Water)
+			self.Resources.Water = self.Resources.Water - diff
 			return temp - diff
 		elseif temp < 295 then
-			local diff = math.Min(math.Min(295 - temp, 15), self.Resources.Energy[1])
-			self.Resources.Energy[1] = self.Resources.Energy[1] - diff
+			local diff = math.Min(math.Min(295 - temp, 15), self.Resources.Energy)
+			self.Resources.Energy = self.Resources.Energy - diff
 			return temp + diff
 		end
 		return temp
@@ -542,7 +547,7 @@ ENT.Lists.Regulate = {
 }
 
 local function EntIsNormal(ent)
-	return not(!IsValid(ent) or ent:EntIndex() == 0 or !IsValid(ent:GetPhysicsObject()) or ent:IsNPC() or ent:IsPlayer() or !ent:GetModel() or ent.CDSIgnore or ent:GetClass() == "gmod_ghost" or string.sub(ent:GetClass(), 1, 4) == "func")
+	return not (!IsValid(ent) or ent:EntIndex() == 0 or !IsValid(ent:GetPhysicsObject()) or ent:IsNPC() or ent:IsPlayer() or !ent:GetModel() or ent.CDSIgnore or ent:GetClass() == "gmod_ghost" or string.sub(ent:GetClass(), 1, 4) == "func")
 end
 
 function ENT:FindFootBreathEnts(timerid)

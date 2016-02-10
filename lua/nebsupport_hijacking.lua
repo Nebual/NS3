@@ -7,7 +7,6 @@ hook.Add("InitNS3", "HijackEnts", function()
 			ent.Link = ns3_base.Link
 			ent.UnLink = ns3_base.UnLink
 			ent.CollectResources = ns3_base.CollectResources
-			ent.MergeResource = ns3_base.MergeResource
 			ent.Requesting = {}
 			ent.Links = {}
 			ent.DaisyLinks = {}
@@ -37,20 +36,20 @@ hook.Add("InitNS3", "HijackEnts", function()
 				if ent.LastRequested then
 					local fuels = ent:CollectResources()
 					ent.Power = nil
-					if fuels.Fuel[1] > 0 then
+					if fuels.Fuel > 0 then
 						-- Combustion thruster; needs oxygen
-						ent.Power = fuels.Fuel[1]/ent.LastRequested * (fuels.Fuel[2] + 0.25)--75% fuel qual is expected, more is a bonus
-						if fuels.Oxygen[1] > 0 then
-							ent.Power = ent.Power * (fuels.Oxygen[1] * 2 / ent.LastRequested) * fuels.Oxygen[2]
-							ent.Environment.Resources.CarbonDioxide = ent.Environment.Resources.CarbonDioxide + fuels.Oxygen[1]
+						ent.Power = fuels.Fuel/ent.LastRequested
+						if fuels.Oxygen > 0 then
+							ent.Power = ent.Power * (fuels.Oxygen * 2 / ent.LastRequested)
+							ent.Environment.Resources.CarbonDioxide = ent.Environment.Resources.CarbonDioxide + fuels.Oxygen
 						elseif envoxy < 0.12 then
 							ent.Power = ent.Power * (envoxy / 0.12) ^ 0.6
-							ent.Environment:Convert("Oxygen", "CarbonDioxide", ent.LastRequested - fuels.Fuel[1])
+							ent.Environment:Convert("Oxygen", "CarbonDioxide", ent.LastRequested - fuels.Fuel)
 						else
-							ent.Environment:Convert("Oxygen", "CarbonDioxide", ent.LastRequested - fuels.Fuel[1])
+							ent.Environment:Convert("Oxygen", "CarbonDioxide", ent.LastRequested - fuels.Fuel)
 						end
-					elseif fuels.Energy[1] > 0 then
-						ent.Power = (fuels.Energy[1]/8)/ent.LastRequested * (fuels.Energy[2] - 0.2)
+					elseif fuels.Energy > 0 then
+						ent.Power = (fuels.Energy / 8) / ent.LastRequested
 					end
 					if ent.Power then -- Something gave us power! Stop asking
 						ent.Requesting = {}
@@ -69,7 +68,6 @@ hook.Add("InitNS3", "HijackEnts", function()
 			ent.Link = ns3_base.Link
 			ent.UnLink = ns3_base.UnLink
 			ent.StoreCollectResources = ns3_base.StoreCollectResources
-			ent.MergeResource = ns3_base.MergeResource
 			ent.Requesting = {}
 			ent.Links = {}
 			ent.DaisyLinks = {}
@@ -84,9 +82,9 @@ hook.Add("InitNS3", "HijackEnts", function()
 				if !IsValid(ent) then timer.Destroy(timerid) return end
 				ent:StoreCollectResources()
 				//local envoxy = (ent.Environment.Resources.Oxygen / ent.Environment.Max)
-				ent.Requesting.Energy = ent.BufferSize - ent.Resources.Energy[1]
-				ent.Requesting.Oxygen = ent.BufferSize - ent.Resources.Oxygen[1]
-				ent.Requesting.Water = ent.BufferSize - ent.Resources.Water[1] // Add nitro
+				ent.Requesting.Energy = ent.BufferSize - ent.Resources.Energy
+				ent.Requesting.Oxygen = ent.BufferSize - ent.Resources.Oxygen
+				ent.Requesting.Water = ent.BufferSize - ent.Resources.Water // Add nitro
 			end)
 			ent.RegulateTemp = ns3_utility.Lists.Regulate.Heat_Regulator
 			ent.RegulateAir = ns3_utility.Lists.Regulate.Air_Regulator
