@@ -57,10 +57,10 @@ end
 function ENT:SetActive( value, caller )
 	if tobool(value) then
 		self.Active = true
-		local r,g,b,a = self.Entity:GetColor() // This is just a quick "fix" for being in water. Namage anyone?
-		if r == 50 && g == 50 then self.Entity:SetColor(255,255,255,a) end
-		
-		if !self.Mute then 
+		local col = self:GetColor() // This is just a quick "fix" for being in water. Namage anyone?
+		if col.r == 50 && col.g == 50 then self:SetColor(Color(255,255,255,col.a)) end
+
+		if !self.Mute then
 			if self.IdleSound then self.Entity:EmitSound( self.IdleSound ) end
 			if self.IdleSound2 then self.Entity:EmitSound( self.IdleSound2 ) end
 		end

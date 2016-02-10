@@ -14,10 +14,12 @@ concommand.Add("ns3_reload", function(ply,cmd,args)
 	if !noclientside then
 		net.Start("cltoast")
 			local sh_ns3 = file.Read("autorun/sh_ns3.lua","LUA")
-			if !NS3 then sh_ns3 = "NS3 = nil\n"..sh_ns3 end
+			if !NS3 then sh_ns3 = "NS3 = nil\r\n "..sh_ns3 end
+			net.WriteUInt(1,16)
 			net.WriteString(sh_ns3)
 		net.Broadcast()
 		net.Start("cltoast")
+			net.WriteUInt(1,16)
 			net.WriteString(file.Read("cl_ns3.lua","LUA"))
 		net.Broadcast()
 	end
@@ -112,7 +114,7 @@ end
 local ns3_spacenoclip 	= GetConVar("ns3_spacenoclip")
 local ns3_god 			= GetConVar("ns3_god")
 function NS3.EnvironmentCheckOnPlayer(ply)
-	if !ply:IsValid() or !ply:Alive() then return end
+	if !ply:IsValid() or !ply:Alive() or !ply.Suit then return end
 	local pos = ply:GetPos()
 	local footent
 

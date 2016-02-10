@@ -105,7 +105,7 @@ function ENT:Think()
 	if self.WaterPhobic then
 		if self.Entity:WaterLevel() > 1 then 
 			-- Turn off in water
-			self.Entity:SetColor(50, 50, 50, 255)
+			self.Entity:SetColor(Color(50, 50, 50, 255))
 			self:SetActive(false)
 			self.OverlayWarning = "Excessive water detected"
 			self.HadWetShutdown = true
@@ -114,7 +114,7 @@ function ENT:Think()
 		elseif self.HadWetShutdown then
 			self.HadWetShutdown = nil
 			self.OverlayWarning = ""
-			self.Entity:SetColor(255, 255, 255, 255)
+			self.Entity:SetColor(Color(255, 255, 255, 255))
 			self:UpdateOverlayText()
 		end
 	end
