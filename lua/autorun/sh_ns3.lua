@@ -30,6 +30,7 @@ if !NS3 then
 	if !ConVarExists("ns3_spacedamage") then CreateConVar("ns3_spacedamage", 1, {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}) end
 end
 include("ResourceDatabase.lua")
+include("sh_nebsupporter_tool.lua")
 
 if SERVER then
 	include("sv_ns3.lua")
@@ -37,6 +38,8 @@ if SERVER then
 	include("nebsupport_hijacking.lua")
 	AddCSLuaFile()
 	AddCSLuaFile("cl_ns3.lua")
+	AddCSLuaFile("ResourceDatabase.lua")
+	AddCSLuaFile("sh_nebsupporter_tool.lua")
 else
 	include("cl_ns3.lua")
 end
