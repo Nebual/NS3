@@ -140,6 +140,7 @@ function ENT:Think()
 	local product = self:ProduceResource()-- Manufactor the resource!
 	if !product then return EndThink(self) end
 	if self.Resource != "Energy" then self.Requesting.Energy = product[2] * self.Efficiency end
+	if !product[1] then return EndThink(self) end
 
 	-- "Productivity" is based on how often the gen is running (does it have enough fuel?) and how much of its product is actually used
 	local produced = product[2]
@@ -177,15 +178,23 @@ ENT.Lists.ProduceResource = {
 	end,
 	Energy_Coal = function(self)
 		local fuels = self:CollectResources()
-		local product = {self.Resource, self.Speed * 3 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
-		self.Requesting.Fuel = product[2] * self.Efficiency
-		return product
+		local produce = self.Speed * 3 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)
+		self.Requesting.Fuel = produce * self.Efficiency
+		if fuels.Fuel then
+			return {self.Resource, produce}
+		else
+			return {"", produce}
+		end
 	end,
 	Energy_NaturalGas = function(self)
 		local fuels = self:CollectResources()
-		local product = {self.Resource, self.Speed * 8 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
-		self.Requesting.Fuel = product[2] * 0.4 * self.Efficiency
-		return product
+		local produce = self.Speed * 8 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)
+		self.Requesting.Fuel = produce * 0.4 * self.Efficiency
+		if fuels.Fuel then
+			return {self.Resource, produce}
+		else
+			return {"", produce}
+		end
 	end,
 	Energy_Hydro = function(self)
 		local mul = 1
@@ -227,25 +236,35 @@ ENT.Lists.ProduceResource = {
 	LiquidNitrogen = function(self)
 		local fuels = self:CollectResources()
 
-		local ret = {self.Resource, self.Speed * 0.9}
+		local ret = {self.Resource, fuels.Nitrogen * 0.9}
 		self.Requesting.Nitrogen = self.Speed
 		return ret
 	end,
 	Water_Pump = function(self)
+		local fuels = self:CollectResources()
 		// Take away from planet's "water" level, to simulate lakes being depletable (they restore over time)
 		if self:WaterLevel() < 2 then self:LowResource("water submersion!") self:SetActive(false) return end
 		if self.Environment.Resources.Water < self.Speed * 0.5 then self:LowResource("water levels in lake!") return end
 		self.OverlayWarning = nil
-		self.Environment.Resources.Water = self.Environment.Resources.Water - self.Speed * 0.5
-		return {self.Resource, self.Speed * 0.3}
+		if fuels.Energy then
+			self.Environment.Resources.Water = self.Environment.Resources.Water - self.Speed * 0.5
+			return {self.Resource, self.Speed * 0.3}
+		else
+			return {"", self.Speed * 0.3}
+		end
 	end,
 	Water_Condenser = function(self)
-		self.Entity:NextThink( round(CurTime()) + math.random(2,6) + 0.95 )
+		local fuels = self:CollectResources()
+		if fuels.Energy then
+			self.Entity:NextThink( round(CurTime()) + math.random(2,6) + 0.95 )
 
-		if self.Environment.Resources.Hydrogen / self.Environment.Max > 0.005 && self.Environment.Resources.Oxygen / self.Environment.Max > 0.06 then
-			self.Environment.Resources.Hydrogen = self.Environment.Resources.Hydrogen - 2
-			self.Environment.Resources.Oxygen = self.Environment.Resources.Oxygen - 1
-			return {self.Resource, 1}
+			if self.Environment.Resources.Hydrogen / self.Environment.Max > 0.005 && self.Environment.Resources.Oxygen / self.Environment.Max > 0.06 then
+				self.Environment.Resources.Hydrogen = self.Environment.Resources.Hydrogen - 2
+				self.Environment.Resources.Oxygen = self.Environment.Resources.Oxygen - 1
+				return {self.Resource, 1}
+			end
+		else
+			return {"", 1}
 		end
 	end,
 	Plant = function(self)
@@ -280,21 +299,25 @@ ENT.Lists.ProduceResource = {
 		-- Note: Is also H2/CO2/N2, see below
 		if self.Environment.IsSpace then self.OverlayWarning = "No natural resources present in space!" return end
 		local fuels = self:CollectResources()
-		local product
+		local produce
 
 		-- Rate is based on current saturation of the resource within the environment
 		local availres = self.Environment.Resources[self.Resource] / self.Environment.Max
 		if availres == 0 then self.OverlayWarning = "No natural "..self.Resource.." present!" return
-		elseif availres > 0.5 then product = {self.Resource, self.Speed * 2 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)} -- If theres lots, purification is easy
-		elseif availres > 0.2 then product = {self.Resource, self.Speed * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
-		elseif availres > 0.125 then product = {self.Resource, self.Speed * 0.6 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
-		elseif availres > 0.05 then product = {self.Resource, self.Speed * 0.4 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
-		elseif availres > 0.02 then product = {self.Resource, self.Speed * 0.25 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
-		else product = {self.Resource, self.Speed * 0.2 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)} -- If theres hardly any of a resource present, purification is hard
+		elseif availres > 0.5 then produce 		= self.Speed * 2 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor) -- If theres lots, purification is easy
+		elseif availres > 0.2 then produce 		= self.Speed * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)
+		elseif availres > 0.125 then produce	= self.Speed * 0.6 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)
+		elseif availres > 0.05 then produce 	= self.Speed * 0.4 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)
+		elseif availres > 0.02 then produce 	= self.Speed * 0.25 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)
+		else produce 							= self.Speed * 0.2 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor) -- If theres hardly any of a resource present, purification is hard
 		end
-		self.Environment.Resources[self.Resource] = self.Environment.Resources[self.Resource] - product[2]
 
-		return product
+		if fuels.Energy then
+			self.Environment.Resources[self.Resource] = self.Environment.Resources[self.Resource] - produce
+			return {self.Resource, produce}
+		else
+			return {"", produce}
+		end
 	end,
 }
 -- H2/CO2/N2 all share the same function :D
