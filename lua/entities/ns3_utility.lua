@@ -8,21 +8,25 @@ ENT.WireDebugName="NS3 Utility"
 for k=1,5 do util.PrecacheSound( "ambient/creakmetal"..k..".wav" ) end
 
 if CLIENT then
-	local ball = ClientsideModel("models/hunter/misc/shell2x2.mdl", RENDERGROUP_OPAQUE)
-	ball:SetNoDraw( true ) ball:DrawShadow( false )
+	if !NS3.csBall then NS3.csBall = ClientsideModel("models/hunter/misc/shell2x2.mdl", RENDERGROUP_TRANSLUCENT) end
+	local ball = NS3.csBall
+	ball:DrawShadow(false)
+	ball:SetRenderMode(RENDERMODE_TRANSALPHA)
 	ball:SetMaterial("models/shiny")
 	function ENT:Draw()
 		self.BaseClass.Draw(self)
 
-		if LocalPlayer():GetEyeTrace().Entity == self and IsValid(LocalPlayer():GetTool()) and LocalPlayer():GetTool().Mode == "nebsupporter" then
+		if LocalPlayer():GetEyeTrace().Entity == self and LocalPlayer():GetTool() and LocalPlayer():GetTool().Mode == "nebsupporter" then
 
-			local range = self:GetNetworkedInt("Range")
+			local range = self:GetNWInt("Range")
 			if range then
+				ball.Alpha = 100
 				ball:SetColor(Color(0,0,100,100))
 				ball:SetPos(self:GetPos())
 				SetScale(ball, Vector(math.Max(range / 95, 0.01), math.Max(range / 95, 0.01), math.Max(range / 95, 0.01)))
-				timer.Create("ResetNebsupporterBall",5,1,function()
-					ball:SetColor(Color(0,0,0,0))
+				timer.Create("ResetNebsupporterBall",0.05,100,function()
+					ball.Alpha = ball.Alpha - 1
+					ball:SetColor(Color(0,0,100,ball.Alpha))
 				end)
 			end
 		end
@@ -69,7 +73,7 @@ function ENT:Setup()
 		self.Lists.Setup[kind](self)
 	end
 
-	if self.Range then self:SetNetworkedInt("Range",self.Range) end
+	if self.Range then self:SetNWInt("Range",self.Range) end
 
 	self.Overlay = self.OverlayBase .. ": Off!"
 	self:UpdateOverlayText()
