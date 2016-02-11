@@ -20,7 +20,7 @@ function ENT:Initialize()
 end
 
 function ENT:Setup()
-	if self.Resource != "Energy" && self.Resource != "Fuel" && self.Resource != "Water" then WireLib.CreateInputs(self.Entity, { "Vent" }) end
+	if NS3.ResourceMeta[self.Resource].IsVentable then WireLib.CreateInputs(self.Entity, { "Vent" }) end
 	WireLib.CreateSpecialOutputs(self.Entity, {"Current", "Max", "Resource"},{"NORMAL","NORMAL","STRING"})
 	WireLib.TriggerOutput(self.Entity, "Resource", self.Resource)
 

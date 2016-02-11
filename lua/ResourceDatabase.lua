@@ -39,14 +39,22 @@ NS3.ResourceMeta = {
 		},
 		Abstract = true
 	},
-	Oxygen = {},
-	Hydrogen = {},
+	Oxygen = {
+		IsVentable = true,
+	},
+	Hydrogen = {
+		IsVentable = true,
+	},
 	CarbonDioxide = {
 		Name = "Carbon Dioxide",
+		IsVentable = true,
 	},
-	Nitrogen = {},
+	Nitrogen = {
+		IsVentable = true,
+	},
 	LiquidNitrogen = {
 		Name = "Liquid Nitrogen",
+		IsVentable = true,
 	},
 	Water = {},
 	Biofuel = {},
