@@ -19,6 +19,7 @@ if !NS3 then
 		TrackedEnts = {},
 		Space = {IsSpace = true, Name = "Space", Temperature = 14, Pressure = 0, Atmosphere = 0, Gravity = 0, GetTemperature = function() return 14 end, Priority = 0, Radius = 0, Max = 317332591, Resources = {Empty = 314159265}, ObjectsIn = {}},
 		//SpaceEnvironment = {
+		NullFunction = function() end
 	}
 
 	if !ConVarExists("ns3_spacenoclip") then CreateConVar("ns3_spacenoclip", 0, {FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED}) end
