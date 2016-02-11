@@ -22,7 +22,7 @@ DEVICE.SubThink = function(self)
 			timer.Create("StopShowingSuit_"..ply:EntIndex(), 3, 1, function() if IsValid(ply) then ply.Suit.Show = nil end end)
 			local max = GetConVarNumber("ns3_suitmax")
 			local tab1 = {"Oxygen", "Energy", "Coolant"}
-			for k,v in ipairs({"Oxygen", "Energy", "Water"}) do
+			for k,v in ipairs({"Oxygen", "Energy", "Coolant"}) do
 				if ply.Suit[tab1[k]] < max && self.Resources[v] > 0 then
 					local gain = math.Min(self.Speed,self.Resources[v])
 					ply.Suit[tab1[k]] = ply.Suit[tab1[k]] + gain
@@ -40,6 +40,6 @@ DEVICE.SubThink = function(self)
 
 	self.Requesting.Energy = self.Max - self.Resources.Energy
 	self.Requesting.Oxygen = self.Max - self.Resources.Oxygen
-	self.Requesting.Water = self.Max - self.Resources.Water
-	self.OverlayStatus = "Buffer: Energy " .. math.Round(self.Resources.Energy) .. ", Oxygen " .. math.Round(self.Resources.Oxygen) .. ", Water " .. math.Round(self.Resources.Water)
+	self.Requesting.Coolant = self.Max - self.Resources.Coolant
+	self.OverlayStatus = "Buffer: Energy " .. math.Round(self.Resources.Energy) .. ", Oxygen " .. math.Round(self.Resources.Oxygen) .. ", Coolant " .. math.Round(self.Resources.Coolant)
 end

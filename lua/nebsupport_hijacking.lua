@@ -84,7 +84,7 @@ hook.Add("InitNS3", "HijackEnts", function()
 				//local envoxy = (ent.Environment.Resources.Oxygen / ent.Environment.Max)
 				ent.Requesting.Energy = ent.BufferSize - ent.Resources.Energy
 				ent.Requesting.Oxygen = ent.BufferSize - ent.Resources.Oxygen
-				ent.Requesting.Water = ent.BufferSize - ent.Resources.Water // Add nitro
+				ent.Requesting.Coolant = ent.BufferSize - ent.Resources.Coolant
 			end)
 			ent.RegulateTemp = ns3_utility.Lists.Regulate.Heat_Regulator
 			ent.RegulateAir = ns3_utility.Lists.Regulate.Air_Regulator

@@ -150,26 +150,42 @@ function ENT:StoreCollectResources()
 end
 function ENT:SendResources(product)
 	-- Ship it out to our linked ents
-	local res = self.Resource
+	local ourResource = product[1]
+	local currentAmount = product[2]
 	for k,v in ipairs(self.Links) do
 		if !v:IsValid() then table.remove(self.Links, k)
 		else
-			local req = v.Requesting[res]
-			if req && (self.Priority != 1 or v.Priority != 1) then
+			local neededResource, neededAmount, equivalencyRate
+			if v.Requesting[ourResource] then
+				neededResource = ourResource
+				equivalencyRate = 1
+				neededAmount = v.Requesting[ourResource]
+			else
+				for requestedResource, requestedAmount in pairs(v.Requesting) do
+					if NS3.ResourceMeta[requestedResource].Equivalent[ourResource] then
+						neededResource = requestedResource
+						equivalencyRate = NS3.ResourceMeta[requestedResource].Equivalent[ourResource]
+						neededAmount = requestedAmount / equivalencyRate
+						break
+					end
+				end
+			end
+			if neededAmount && (self.Priority != 1 or v.Priority != 1) then
 				-- Are they requesting our resource, and are both of us not storage units?
-				if req < product[2] then
-					v.Requesting[res] = nil
-					table.insert(v.Receiving, {product[1], req})
-					product[2] = product[2] - req
+				if neededAmount < currentAmount then
+					v.Requesting[neededResource] = nil
+					table.insert(v.Receiving, {neededResource, neededAmount * equivalencyRate})
+					currentAmount = currentAmount - neededAmount
 				else
-					v.Requesting[res] = req - product[2]
-					table.insert(v.Receiving, table.Copy(product))
-					product[2] = 0
+					v.Requesting[neededResource] = neededAmount - currentAmount
+					table.insert(v.Receiving, {neededResource, currentAmount * equivalencyRate})
+					currentAmount = 0
 					break
 				end
 			end
 		end
 	end
+	product[2] = currentAmount
 	return product
 end
 

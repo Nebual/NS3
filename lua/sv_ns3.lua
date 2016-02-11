@@ -256,6 +256,7 @@ function NS3.EnvironmentCheckOnPlayer(ply)
 
 	if !ply.Suit.VisorDown and ply:WaterLevel() > 1 and ply.Suit.Coolant < 90 then
 		ply.Suit.Coolant = ply.Suit.Coolant + 5
+		ply.Environment.Resources.Water = ply.Environment.Resources.Water - 5
 		if !ply.Suit.watersound then -- Only play the sound once (it loops), since we keep resetting the timer it'll continuously play until they get out of the water or are full
 			ply.Suit.watersound = CreateSound(ply, "ambient/water/water_run1.wav" )
 

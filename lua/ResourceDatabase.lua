@@ -28,8 +28,8 @@ NS3.ResourceMeta = {
 	},
 	Coolant = {
 		Equivalent = {
-			Water = 1,
-			LiquidNitrogen = 25
+			Water = 0.5,
+			LiquidNitrogen = 5
 		},
 		Abstract = true,
 	},
