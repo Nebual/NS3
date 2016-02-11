@@ -69,6 +69,9 @@ function ENT:Setup()
 				watersound:FadeOut(2.5)
 			end
 		end
+	elseif self.Resource == "Vespene" and self.Style == "Refinery" then
+		self.OverlayBase = "NS3 Vespene Refinery"
+		self.Overlay = self.OverlayBase
 	end
 	if self.Style == "Solar" then
 		if self:GetModel() == "models/slyfo_2/miscequipmentsolar.mdl" then self.Speed = 21 end
@@ -136,10 +139,10 @@ function ENT:Think()
 	end
 
 
-	if self.Resource != "Energy" then self.Requesting.Energy = 3 end -- Always ask for a little bit of energy... I mean its gotta power the display! :P
+	if not NS3.ResourceMeta.Energy.Equivalent[self.Resource] then self.Requesting.Energy = 3 end -- Always ask for a little bit of energy... I mean its gotta power the display! :P
 	local product = self:ProduceResource()-- Manufactor the resource!
 	if !product then return EndThink(self) end
-	if self.Resource != "Energy" then self.Requesting.Energy = product[2] * self.Efficiency end
+	if not NS3.ResourceMeta.Energy.Equivalent[self.Resource] then self.Requesting.Energy = product[2] * self.Efficiency end
 	if !product[1] then return EndThink(self) end
 
 	-- "Productivity" is based on how often the gen is running (does it have enough fuel?) and how much of its product is actually used
@@ -173,7 +176,7 @@ ENT.Lists.ProduceResource = {
 			if output < 0.05 then self:SetActive(false) return end
 			self:SetActive(true)
 			self.OverlayWarning = "Power: "..round(output*100) .."%"
-			return {"Energy", self.Speed * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor) * output}
+			return {"DC", self.Speed * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor) * output}
 		end
 	end,
 	Energy_Coal = function(self)
@@ -210,7 +213,7 @@ ENT.Lists.ProduceResource = {
 		end
 		if self:WaterLevel() > 1 then
 			//self.Entity:EmitSound( self.IdleSound2,100,50 + mul*50, 20 + mul*80 )
-			return {self.Resource, self.Speed * mul * 0.25}
+			return {"DC", self.Speed * mul * 0.25}
 		else
 			//self.Entity:StopSound( self.IdleSound2 )
 			self.OverlayWarning = "Generator must be submerged!"
@@ -218,14 +221,27 @@ ENT.Lists.ProduceResource = {
 		end
 	end,
 	Energy_Wind = function(self)
-		return {self.Resource, self.Speed * self.Environment.Atmosphere * 0.2 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor*2)}
+		return {"DC", self.Speed * self.Environment.Atmosphere * 0.2 * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor*2)}
 	end,
 	Energy_Kinetic = function(self)
 		// Basically this is just so people shove some moving parts on their plane which look steampunky, also it has a rather low max energy output cause people will probably just thruster these.
 		local spd = self:GetPhysicsObject():GetAngleVelocity():Length()
 		if spd > 10 then
-			return {self.Resource, self.Speed * (math.Min(spd,400) ^ 1.5)/8000  * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
+			return {"DC", self.Speed * (math.Min(spd,400) ^ 1.5)/8000  * math.Rand(1-self.RandomFactor, 1 + self.RandomFactor)}
 		end
+	end,
+	AC_VespeneTurbine = function(self)
+		local fuels = self:CollectResources()
+
+		self.Requesting.RefinedVespene = self.Speed / 6
+		return {self.Resource, fuels.RefinedVespene * 2 }
+	end,
+	Vespene_Refinery = function(self)
+		local fuels = self:CollectResources()
+
+		self.Requesting.RawVespene = self.Speed
+		self.Requesting.Hydrogen = self.Speed * 4
+		return {"RefinedVespene", fuels.RawVespene}
 	end,
 	-- Energy_Fusion
 	// NEEDS TO BE HARD TO DO (only turns on for a few seconds, thus needs complex wiring to properly maintain)

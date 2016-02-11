@@ -4,6 +4,7 @@
 NS3.ResourceMeta = {
 	Energy = {
 		Equivalent = {
+			Energy = 1, // stub
 			DC = 1,
 			AC = 5,
 			Quantum = 25,
@@ -127,6 +128,8 @@ NS3.StorageModels = {
 		"models/props_industrial/oil_storage.mdl",
 		"models/props_junk/gascan001a.mdl",
 	},
+	RawVespene 		= table.Add({}, GasTanks),
+	RefinedVespene	= table.Add({}, LiquidTanks),
 }
 
 local GasGenerators = {
@@ -144,11 +147,13 @@ NS3.GeneratorModels = {
 	Water_Pump = GasGenerators,
 	Water_Condenser = {"models/slyfo/moisture_condenser.mdl",},
 	Energy_Solar = {"models/slyfo_2/miscequipmentfieldgen.mdl","models/Squad/sf_plates/sf_plate8x8.mdl","models/Squad/sf_plates/sf_plate4x8.mdl","models/Squad/sf_plates/sf_plate4x4.mdl","models/Squad/sf_plates/sf_plate2x4.mdl","models/Squad/sf_plates/sf_plate1x4.mdl","models/Squad/sf_plates/sf_plate2x2.mdl",},
-	Energy_Coal = {"models/props_vehicles/generator.mdl"},
-	Energy_NaturalGas = {"models/props_vehicles/generator.mdl"},
+	//Energy_Coal = {"models/props_vehicles/generator.mdl"},
+	//Energy_NaturalGas = {"models/props_vehicles/generator.mdl"},
 	Energy_Hydro = {"models/props_outland/generator_static01a.mdl","models/XQM/podremake.mdl"},
 	Energy_Wind = {"models/props_citizen_tech/windmill_blade002a.mdl"},
 	Energy_Kinetic = {"models/props/de_prodigy/fanoff.mdl"},
+	Vespene_Refinery = {"models/props_outland/generator_static01a.mdl"},
+	AC_VespeneTurbine = {"models/props_outland/generator_static01a.mdl"},
 	Fuel_Pump = {"models/props_vehicles/generator.mdl"},
 	Plant = {"models/props/cs_office/plant01.mdl","models/props/de_inferno/potted_plant3.mdl","models/props/de_inferno/potted_plant2.mdl","models/props/de_inferno/potted_plant1.mdl",},
 }

@@ -319,12 +319,12 @@ if CLIENT then
 		-- Begin Tree -----------------------
 		local tree = vgui.Create("DTree", CPanel)
 		tree:Dock(TOP)
-		tree:SetSize(w, 350)
+		tree:SetSize(w, 450)
 
 		for _, category in pairs({"Storage", "Generator", "Utility"}) do
 			local cattree = tree:AddNode(category)
 
-			for kind, models in pairs(NS3[category .. "Models"]) do
+			for kind, models in pairsByKeys(NS3[category .. "Models"]) do
 				local name = string.Replace(kind, '_', ' ')
 
 				if NS3.ResourceMeta[kind] then
