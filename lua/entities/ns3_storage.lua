@@ -24,16 +24,12 @@ function ENT:Setup()
 	WireLib.CreateSpecialOutputs(self.Entity, {"Current", "Max", "Resource"},{"NORMAL","NORMAL","STRING"})
 	WireLib.TriggerOutput(self.Entity, "Resource", self.Resource)
 
-	if self.Resource == "Energy" then
-		self.Max = round(self.Entity:GetPhysicsObject():GetVolume() ^ 0.46 * 1.44) * 5
-	else
-		self.Max = round(self.Entity:GetPhysicsObject():GetVolume() ^ 0.46 * 1.08) * 5
-	end // Energy can be a bit denser
+	self.Max = round(self.Entity:GetPhysicsObject():GetVolume() ^ 0.46 * NS3.ResourceMeta[self.Resource].Density) * 5
 	WireLib.TriggerOutput(self.Entity, "Max", self.Max)
 	self.VentingNoise = CreateSound(self.Entity,"thrusters/jet04.wav")
 	self.VentingNoise:ChangeVolume(0.8,0.25) self.VentingNoise:ChangePitch(110,0.25) self.VentingNoise:SetSoundLevel(50)
 
-	self.Overlay = "NS3 "..self.Resource.." Storage"
+	self.Overlay = "NS3 "..NS3.ResourceMeta[self.Resource].Name.." Storage"
 end
 
 function ENT:AcceptInput(name,activator,caller) -- Things like E

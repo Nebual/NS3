@@ -8,7 +8,8 @@ NS3.ResourceMeta = {
 			AC = 5,
 			Quantum = 25,
 		},
-		Abstract = true
+		Abstract = true,
+		Density = 1.44, // Energy is a bit denser than others
 	},
 	DC = {
 		Name = "DC Electricity",
@@ -56,12 +57,27 @@ NS3.ResourceMeta = {
 		Name = "Liquid Nitrogen",
 		IsVentable = true,
 	},
+	RawVespene = {
+		Name = "Raw Vespene Gas",
+		IsVentable = true,
+		Density = 0.5,
+	},
+	RefinedVespene = {
+		Name = "Refined Vespene Gas",
+		Density = 0.25,
+	},
 	Water = {},
 	Biofuel = {},
 	Deuterium = {},
 }
 
-local MinimumResourceFootprint = {IsSolid=false, Equivalent={}, Abstract=false}
+local MinimumResourceFootprint = {
+	IsSolid = false,
+	IsVentable = false,
+	Equivalent = {},
+	Abstract = false,
+	Density = 1.08,
+}
 for ResourceName, ResourceTable in pairs(NS3.ResourceMeta) do
 	ResourceTable.Name = ResourceTable.Name or ResourceName
 	for FootprintKey,FootprintValue in pairs(MinimumResourceFootprint) do
