@@ -51,10 +51,6 @@ function ENT:Initialize()
 	self.LastWarned = 0
 	self.WaterPhobic = true
 
-	-- Incase we don't have environments, like on gm_ maps, give the generator its own 'planet' to harvest from
-	self.Environment = {Resources = {Empty = 0}, Max = 4000000, Pressure = 1, Gravity = 1}
-	for k,_ in pairs(NS3.Resources) do self.Environment.Resources[k] = 1000000 end
-
 	self.OverlayBase =  "NS3 Unspecified Utility Device"
 end
 
@@ -115,15 +111,11 @@ for _, filename in pairs(file.Find('entities/utilities/*.lua', 'LUA')) do
 	if DEVICE.Regulate then ENT.Lists.Regulate[kind] = DEVICE.Regulate end
 end
 
-local function EntIsNormal(ent)
-	return not (!IsValid(ent) or ent:EntIndex() == 0 or !IsValid(ent:GetPhysicsObject()) or ent:IsNPC() or ent:IsPlayer() or !ent:GetModel() or ent.CDSIgnore or ent:GetClass() == "gmod_ghost" or string.sub(ent:GetClass(), 1, 4) == "func")
-end
-
 function ENT:FindFootBreathEnts(timerid)
 	if !IsValid(self) then timer.Remove(timerid) return end
 	for k,v in pairs(self.FootBreaths) do v[self.Resource] = nil end
 	self.FootBreaths = {}
-	for k,v in pairs(ents.FindInSphere(self:GetPos(),self.Range)) do if EntIsNormal(v) then self.FootBreaths[v:EntIndex()] = v end end
+	for k,v in pairs(ents.FindInSphere(self:GetPos(),self.Range)) do if NS3.EntIsSane(v) then self.FootBreaths[v:EntIndex()] = v end end
 
 	local constraintstab
 	if self:GetParent():IsValid() then constraintstab = constraint.GetAllConstrainedEntities(self:GetParent())

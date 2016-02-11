@@ -49,11 +49,15 @@ end) -- For development mostly
 function NS3.TrackNS3Ent(ent)
 	if IsValid(ent) and ent:EntIndex() > 20 then
 		timer.Create("TrackNS3Ent_"..ent:EntIndex(), 0.15, 1, function()
-			if !IsValid(ent) or ent:EntIndex() == 0 or !IsValid(ent:GetPhysicsObject()) or ent:IsNPC() or ent:IsPlayer() or !ent:GetModel() or ent.CDSIgnore or ent:GetClass() == "gmod_ghost" or string.sub(ent:GetClass(), 1, 4) == "func" then
+			if NS3.EntIsSane(ent) then
 				table.insert(NS3.TrackedEnts, ent)
 			end
 		end)
 	end
+end
+
+function NS3.EntIsSane(ent)
+	return not (!IsValid(ent) or ent:EntIndex() == 0 or !IsValid(ent:GetPhysicsObject()) or ent:IsNPC() or ent:IsPlayer() or !ent:GetModel() or ent.CDSIgnore or ent:GetClass() == "gmod_ghost" or string.sub(ent:GetClass(), 1, 4) == "func")
 end
 
 function NS3.InitNS3()
@@ -63,7 +67,7 @@ function NS3.InitNS3()
 		NS3.HasPlanets = true
 		NS3.Environments = table.Copy(NS3.Planets)
 		for k,v in pairs(NS3.Stars) do table.insert(NS3.Environments, v) end
-		timer.Create("NS3_EnvironmentCheck", 1, 0, NS3.EnvironmentCheck)
+		timer.Create("NS3_EnvironmentCheck", 1, 0, function() NS3.EnvironmentCheck() end)
 		hook.Add("OnEntityCreated", "TrackNS3Ent", NS3.TrackNS3Ent)
 		//hook.Add("Think","NS3_SpaceSlow",NS3.SpaceSlow) // Tries to slow all players/ents in space down about 5x (maxspeed 50km/h)
 	else
@@ -178,7 +182,6 @@ function NS3.EnvironmentCheckOnPlayer(ply)
 		if (ply.Suit.Temperature < 255 or ply.Suit.Temperature>335) then
 			-- The "Painful zone"
 			ply:TakeDamage(math.Min(math.abs(difftemp)/20,10), 0)
-			print(ply:Nick()..difftemp)
 			if ply:Health() <= 0 then
 				ply:StopSound( "NPC_Stalker.BurnFlesh" )
 				ply:EmitSound( "NPC_Stalker.BurnFlesh" )

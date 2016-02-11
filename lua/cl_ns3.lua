@@ -150,7 +150,7 @@ function NS3.CLThink()
 		TarVisorAlpha = NS3.VisorDown and 20 or 150
 	end
 end
-timer.Create("NS3_CLThink",1,0,NS3.CLThink)
+timer.Create("NS3_CLThink", 1, 0, function() NS3.CLThink() end)
 
 hook.Add("InitPostEntity","NS3_gmod_auto_tool",function() if gmod_tool_auto then gmod_tool_auto.AddPattern("^ns3_.*$", { "nebsupporter", "wire_adv", "wire_debugger" }) end end)
 print("[NS3 Client - Nebcorp's Life Support and Resources Mod Loaded]")

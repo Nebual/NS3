@@ -1,5 +1,5 @@
 DEVICE.Setup = function(self)
-	self.Regulate = self.Lists.Regulate[kind] or NS3.NullFunction
+	self.Regulate = self.Lists.Regulate[self.Style] or NS3.NullFunction
 	self.Range = NS3.RegulatorModels[self:GetModel()] or math.Round(self.Entity:GetPhysicsObject():GetVolume() ^ 0.72 * 0.8)
 	self.WaterPhobic = false
 	self.BufferSize = math.Round(self.Range / 10)
