@@ -7,7 +7,6 @@ concommand.Add("ns3_reload", function(ply,cmd,args)
 	local args = table.concat(args, " ")
 	if string.find(args,"full") then NS3 = nil end
 	include("autorun/sh_ns3.lua")
-	include("sv_ns3.lua")
 
 	for k,v in pairs(player.GetAll()) do v.Suit.Last = "" end
 	local noclientside = string.find(args,"nocli")
