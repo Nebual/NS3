@@ -180,8 +180,10 @@ function NS3.NebSupporterUpdateGhost(self, ent, ply)
 		util.PrecacheModel(model)
 		return
 	end
+	if (SERVER && !game.SinglePlayer()) then return end
+	if (CLIENT && game.SinglePlayer()) then return end
 
-	if not IsValid(self.GhostEntity) or self.GhostEntity:GetModel() ~= model then
+	if !IsValid(self.GhostEntity) or self.GhostEntity:GetModel() ~= string.lower(model) then
 		self:MakeGhostEntity(model, Vector(0, 0, 0), Angle(0, 0, 0))
 
 		if IsValid(self.GhostEntity) then
