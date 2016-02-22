@@ -207,7 +207,7 @@ end
 
 function ENT:UpdateOverlayText()
 	//local state = ": Off!" if self.Active then state = ": On!" end
-	local text = self.Overlay or self.BaseOverlay or ""//..state
+	local text = self.Overlay or self.OverlayBase or ""//..state
 	if self.OverlayWarning then text = text .. "\n"..self.OverlayWarning end
 	if self.OverlayStatus then text = text .. "\n"..self.OverlayStatus end
 	self:SetOverlayText(text)

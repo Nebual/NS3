@@ -153,8 +153,8 @@ NS3.GeneratorModels = {
 	Energy_Wind = {"models/props_citizen_tech/windmill_blade002a.mdl"},
 	Energy_Kinetic = {"models/props/de_prodigy/fanoff.mdl"},
 	Vespene_Refinery = {"models/props_outland/generator_static01a.mdl"},
-	AC_VespeneTurbine = {"models/props_outland/generator_static01a.mdl"},
-	Fuel_Pump = {"models/props_vehicles/generator.mdl"},
+	AC_Vespene_Turbine = {"models/props_outland/generator_static01a.mdl"},
+	//Fuel_Pump = {"models/props_vehicles/generator.mdl"},
 	Plant = {"models/props/cs_office/plant01.mdl","models/props/de_inferno/potted_plant3.mdl","models/props/de_inferno/potted_plant2.mdl","models/props/de_inferno/potted_plant1.mdl",},
 }
 for k,v in pairs(NS3.GeneratorModels.Energy_Solar) do NS3.EntMaterials[v] = "models/XQM/BoxFull_diffuse" end

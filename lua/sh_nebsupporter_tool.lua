@@ -21,15 +21,7 @@ function NS3.NebSupporterLC(self, trace)
 	if type == "Storage" then
 		ent = MakeNS3Storage(ply, trace.HitPos, Ang, model, res)
 	elseif type == "Generator" then
-		local underscore = string.find(res, "_")
-		local style
-
-		if underscore then
-			style = string.sub(res, underscore + 1)
-			res = string.sub(res, 0, underscore - 1)
-		end
-
-		ent = MakeNS3Generator(ply, trace.HitPos, Ang, model, res, style)
+		ent = MakeNS3Generator(ply, trace.HitPos, Ang, model, res)
 	elseif type == "Utility" then
 		ent = MakeNS3Utility(ply, trace.HitPos, Ang, model, res)
 	end
@@ -369,7 +361,7 @@ end
 
 duplicator.RegisterEntityClass("ns3_storage", MakeNS3Storage, "Pos", "Ang", "Model", "Resource")
 
-function MakeNS3Generator(ply, Pos, Ang, Model, Resource, Style)
+function MakeNS3Generator(ply, Pos, Ang, Model, Style, Resource)
 	--if ( !pl:CheckLimit( "ns3_storage" ) ) then return false end
 	local ent = ents.Create("ns3_generator")
 	if not IsValid(ent) then return false end
@@ -382,7 +374,7 @@ function MakeNS3Generator(ply, Pos, Ang, Model, Resource, Style)
 	--if res == "Energy" then ent.Voltage = NS3.GeneratorVoltages[model] * math.Rand(0.95,1.05) end
 	ent:SetAngles(Ang)
 	ent:SetPos(Pos)
-	ent.Resource = Resource
+	if Resource then ent.Resource = Resource end
 	ent.Style = Style
 	ent:Spawn()
 	ent:Setup()
@@ -392,7 +384,7 @@ function MakeNS3Generator(ply, Pos, Ang, Model, Resource, Style)
 	return ent
 end
 
-duplicator.RegisterEntityClass("ns3_generator", MakeNS3Generator, "Pos", "Ang", "Model", "Resource", "Style")
+duplicator.RegisterEntityClass("ns3_generator", MakeNS3Generator, "Pos", "Ang", "Model", "Style", "Resource")
 
 function MakeNS3Utility(ply, Pos, Ang, Model, Resource)
 	--if ( !pl:CheckLimit( "ns3_storage" ) ) then return false end
