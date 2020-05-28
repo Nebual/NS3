@@ -96,6 +96,7 @@ for k,_ in pairs(NS3.Resources) do NS3.Space.Resources[k] = 0 end
 
 -- models/props_crates/static_crate_(40, 48, 64).mdl are great "ammo" crates
 -- models/Slyfo/barrel_orange.mdl perfect for fuel or maybe water
+-- models/props/de_nuke/nuclearcontainerboxclosed.mdl nuclear fuel
 local Tanks = {
 	"models/props_wasteland/laundry_washer001a.mdl",
 	"models/props_c17/canister_propane01a.mdl",
@@ -109,6 +110,8 @@ local LiquidTanks = table.Add({
 	"models/props_industrial/oil_storage.mdl",
 	"models/Slyfo/crate_watersmall.mdl",
 	"models/props_fortifications/fueldrum.mdl", -- Good for liquids
+	"models/props/de_nuke/powerplanttank.mdl",
+	"models/props/de_nuke/fuel_cask.mdl",
 }, Tanks)
 NS3.StorageModels = {
 	Oxygen 			= table.Add({
@@ -194,7 +197,7 @@ NS3.UtilityModels = {
 	Planetary_Probe = {"models/Slyfo/swordrecondrone.mdl", "models/Slyfo/probe1.mdl", "models/Slyfo/probe2.mdl"},
 	Gravity_Regulator = {"models/Slyfo/drillbase_basic.mdl","models/slyfo/sat_rfg.mdl","models/sbep_community/d12shieldemitter.mdl",},
 	Resource_Pump = {"models/props_lab/tpplugholder_single.mdl","models/props_wasteland/gaspump001a.mdl",},
-	Resource_Counter = {"models/Slyfo/swordrecondrone.mdl", "models/Slyfo/probe1.mdl", "models/Slyfo/probe2.mdl"},
+	Resource_Counter = {"models/props_lab/reciever01a.mdl", "models/props_lab/reciever01b.mdl"},
 }
 
 -- List of "sizes" to use for specific models. If not set, defaults to a volume formula
